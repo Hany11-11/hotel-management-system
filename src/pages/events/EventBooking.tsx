@@ -38,7 +38,7 @@ const BookingStep: React.FC<BookingStepProps> = ({
   description,
 }) => (
   <div
-    className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-colors ${
+    className={`flex flex-col items-center text-center p-4 rounded-lg border-2 transition-colors min-h-[120px] ${
       isActive
         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400"
         : isCompleted
@@ -47,7 +47,7 @@ const BookingStep: React.FC<BookingStepProps> = ({
     }`}
   >
     <div
-      className={`flex items-center justify-center w-10 h-10 rounded-full font-bold ${
+      className={`flex items-center justify-center w-10 h-10 rounded-full font-bold mb-3 ${
         isActive
           ? "bg-blue-500 text-white"
           : isCompleted
@@ -57,9 +57,9 @@ const BookingStep: React.FC<BookingStepProps> = ({
     >
       {isCompleted ? <CheckCircle className="w-5 h-5" /> : stepNumber}
     </div>
-    <div>
+    <div className="flex-1">
       <h3
-        className={`font-semibold ${
+        className={`font-semibold text-sm mb-1 ${
           isActive
             ? "text-blue-700 dark:text-blue-300"
             : isCompleted
@@ -69,7 +69,9 @@ const BookingStep: React.FC<BookingStepProps> = ({
       >
         {title}
       </h3>
-      <p className="text-sm text-gray-600 dark:text-gray-400">{description}</p>
+      <p className="text-xs text-gray-600 dark:text-gray-400 leading-tight">
+        {description}
+      </p>
     </div>
   </div>
 );
@@ -492,9 +494,9 @@ export const EventBookingWorkflow: React.FC = () => {
             </div>
 
             {/* Event Basic Information */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -560,7 +562,7 @@ export const EventBookingWorkflow: React.FC = () => {
             {/* Event Timing */}
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                   <Clock className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -671,9 +673,9 @@ export const EventBookingWorkflow: React.FC = () => {
             </div>
 
             {/* Additional Details */}
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                   <FileText className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -1795,7 +1797,7 @@ export const EventBookingWorkflow: React.FC = () => {
       </div>
 
       {/* Progress Steps */}
-      <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         {steps.map((step) => (
           <div
             key={step.number}
@@ -1804,11 +1806,11 @@ export const EventBookingWorkflow: React.FC = () => {
                 handleStepChange(step.number);
               }
             }}
-            className={
+            className={`transition-transform hover:scale-105 ${
               step.number <= currentStep + 1
                 ? "cursor-pointer"
                 : "cursor-not-allowed opacity-50"
-            }
+            }`}
           >
             <BookingStep
               stepNumber={step.number}
