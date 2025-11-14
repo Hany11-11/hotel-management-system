@@ -31,6 +31,7 @@ const PackageForm: React.FC<PackageFormProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { createEventPackage, updateEventPackage } = useHotel();
   const [formData, setFormData] = useState({
     name: eventPackage?.name || "",
     description: eventPackage?.description || "",
@@ -48,7 +49,7 @@ const PackageForm: React.FC<PackageFormProps> = ({
       : [],
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (
@@ -60,14 +61,34 @@ const PackageForm: React.FC<PackageFormProps> = ({
       return;
     }
 
-    const packageData: Omit<EventPackage, "id" | "createdAt" | "updatedAt"> = {
-      ...formData,
-      includedServices: formData.includedServices,
-      applicableEventTypes: formData.applicableEventTypes,
-    };
+    try {
+      const packageData: Omit<EventPackage, "id" | "createdAt" | "updatedAt"> =
+        {
+          ...formData,
+          includedServices: formData.includedServices,
+          applicableEventTypes: formData.applicableEventTypes,
+        };
 
-    console.log("Package data to save:", packageData);
-    onSuccess();
+      if (eventPackage) {
+        // Update existing package
+        await updateEventPackage({
+          ...packageData,
+          id: eventPackage.id,
+          createdAt: eventPackage.createdAt,
+          updatedAt: new Date().toISOString(),
+        });
+        alert("Event package updated successfully!");
+      } else {
+        // Create new package
+        await createEventPackage(packageData);
+        alert("Event package created successfully!");
+      }
+
+      onSuccess();
+    } catch (error) {
+      console.error("Failed to save event package:", error);
+      alert("Failed to save event package. Please try again.");
+    }
   };
 
   const handleServiceChange = (service: string, checked: boolean) => {
@@ -301,7 +322,7 @@ const PackageForm: React.FC<PackageFormProps> = ({
 };
 
 export const EventPackages: React.FC = () => {
-  const { state } = useHotel();
+  const { state, updateEventPackage, deleteEventPackage } = useHotel();
   const packages = state.eventPackages || [];
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -374,20 +395,36 @@ export const EventPackages: React.FC = () => {
     setIsViewModalOpen(true);
   };
 
-  const handleDeletePackage = (packageId: string) => {
+  const handleDeletePackage = async (packageId: string) => {
     if (
       window.confirm(
         "Are you sure you want to delete this package? This action cannot be undone."
       )
     ) {
-      console.log("Delete package:", packageId);
-      // In a real app, this would dispatch a delete action
+      try {
+        await deleteEventPackage(packageId);
+        alert("Event package deleted successfully!");
+      } catch (error) {
+        console.error("Failed to delete event package:", error);
+        alert("Failed to delete event package. Please try again.");
+      }
     }
   };
 
-  const togglePackageStatus = (packageId: string) => {
-    console.log("Toggle package status:", packageId);
-    // In a real app, this would dispatch an update action
+  const togglePackageStatus = async (packageId: string) => {
+    try {
+      const packageToUpdate = packages.find((pkg) => pkg.id === packageId);
+      if (packageToUpdate) {
+        await updateEventPackage({
+          ...packageToUpdate,
+          isActive: !packageToUpdate.isActive,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    } catch (error) {
+      console.error("Failed to update package status:", error);
+      alert("Failed to update package status. Please try again.");
+    }
   };
 
   const packageStats = {
@@ -625,28 +662,28 @@ export const EventPackages: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewPackage(pkg)}
-                          className="p-1"
+                          className="flex items-center justify-center w-12 h-12 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700 border-blue-200"
                           title="View Details"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-8 h-8" />
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleEditPackage(pkg)}
-                          className="p-1"
+                          className="flex items-center justify-center w-12 h-12 p-0 text-green-600 hover:bg-green-50 hover:text-green-700 border-green-200"
                           title="Edit Package"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-8 h-8" />
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeletePackage(pkg.id)}
-                          className="p-1 text-red-600 hover:text-red-700 hover:border-red-300"
+                          className="flex items-center justify-center w-12 h-12 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
                           title="Delete Package"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-8 h-8" />
                         </Button>
                       </div>
                     </td>
@@ -671,9 +708,9 @@ export const EventPackages: React.FC = () => {
                 {packages.length === 0 && (
                   <Button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-4 h-4" />
                     Create First Package
                   </Button>
                 )}
@@ -693,7 +730,7 @@ export const EventPackages: React.FC = () => {
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={() => {
             setIsCreateModalOpen(false);
-            // In a real app, this would refresh the packages list
+            // The component will automatically re-render with updated data from context
           }}
         />
       </Modal>
@@ -717,7 +754,7 @@ export const EventPackages: React.FC = () => {
             onSuccess={() => {
               setIsEditModalOpen(false);
               setSelectedPackage(null);
-              // In a real app, this would refresh the packages list
+              // The component will automatically re-render with updated data from context
             }}
           />
         )}

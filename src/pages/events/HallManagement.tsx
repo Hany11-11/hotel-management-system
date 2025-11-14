@@ -712,28 +712,28 @@ export const HallManagement: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleViewHall(hall)}
-                            className="p-1"
+                            className="flex items-center justify-center w-12 h-12 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700 border-blue-200"
                             title="View Details"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-8 h-8" />
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEditHall(hall)}
-                            className="p-1"
+                            className="flex items-center justify-center w-12 h-12 p-0 text-green-600 hover:bg-green-50 hover:text-green-700 border-green-200"
                             title="Edit Hall"
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit className="w-8 h-8" />
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteHall(hall.id)}
-                            className="p-1 text-red-600 hover:text-red-700 hover:border-red-300"
+                            className="flex items-center justify-center w-12 h-12 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
                             title="Delete Hall"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-8 h-8" />
                           </Button>
                         </div>
                       </td>

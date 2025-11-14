@@ -529,6 +529,12 @@ interface HotelContextType {
   createEvent: (event: Omit<Event, "id" | "createdAt" | "updatedAt">) => Event;
   updateEvent: (event: Event) => Event;
   deleteEvent: (eventId: string) => void;
+  // Event Packages CRUD
+  createEventPackage: (
+    eventPackage: Omit<EventPackage, "id" | "createdAt" | "updatedAt">
+  ) => EventPackage;
+  updateEventPackage: (eventPackage: EventPackage) => EventPackage;
+  deleteEventPackage: (packageId: string) => void;
   // Additional Services CRUD
   createAdditionalService: (
     service: Omit<AdditionalService, "id" | "createdAt" | "updatedAt">
@@ -805,6 +811,33 @@ export const HotelProvider: React.FC<{ children: ReactNode }> = ({
     dispatch({ type: "DELETE_HALL", payload: hallId });
   };
 
+  // Event Packages CRUD functions
+  const createEventPackage = (
+    eventPackage: Omit<EventPackage, "id" | "createdAt" | "updatedAt">
+  ) => {
+    const newEventPackage: EventPackage = {
+      ...eventPackage,
+      id: `pkg-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    dispatch({ type: "ADD_EVENT_PACKAGE", payload: newEventPackage });
+    return newEventPackage;
+  };
+
+  const updateEventPackage = (eventPackage: EventPackage) => {
+    const updatedEventPackage = {
+      ...eventPackage,
+      updatedAt: new Date().toISOString(),
+    };
+    dispatch({ type: "UPDATE_EVENT_PACKAGE", payload: updatedEventPackage });
+    return updatedEventPackage;
+  };
+
+  const deleteEventPackage = (packageId: string) => {
+    dispatch({ type: "DELETE_EVENT_PACKAGE", payload: packageId });
+  };
+
   return (
     <HotelContext.Provider
       value={{
@@ -814,6 +847,9 @@ export const HotelProvider: React.FC<{ children: ReactNode }> = ({
         createEvent,
         updateEvent,
         deleteEvent,
+        createEventPackage,
+        updateEventPackage,
+        deleteEventPackage,
         createAdditionalService,
         updateAdditionalService,
         deleteAdditionalService,

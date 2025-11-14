@@ -51,7 +51,6 @@ import { HallManagement } from "./pages/events/HallManagement";
 import { EventBookingWorkflow } from "./pages/events/EventBooking";
 import { EventBookingsOverview } from "./pages/events/EventBookingsOverview";
 import { EventReporting } from "./pages/events/EventReporting";
-import { AdditionalServices } from "./pages/events/AdditionalServices";
 import { CreateEvent } from "./pages/events";
 
 // Other
@@ -105,10 +104,6 @@ function App() {
                     <Route
                       path="/events/packages"
                       element={<EventPackages />}
-                    />
-                    <Route
-                      path="/events/services"
-                      element={<AdditionalServices />}
                     />
                     <Route path="/events/create" element={<CreateEvent />} />
                     <Route

@@ -24,7 +24,6 @@ import {
   Package,
   Plus,
   BarChart,
-  Wrench,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -97,11 +96,6 @@ const navItems: NavItem[] = [
         path: "/events/packages",
         label: "Event Packages",
         icon: <Package className="w-4 h-4" />,
-      },
-      {
-        path: "/events/services",
-        label: "Additional Services",
-        icon: <Wrench className="w-4 h-4" />,
       },
       {
         path: "/events/reports",

@@ -10,7 +10,6 @@ import {
   Save,
   Plus,
   X,
-  Wrench,
   Calendar,
   Clock,
 } from "lucide-react";
@@ -135,7 +134,6 @@ export const EventBookingWorkflow: React.FC = () => {
     requirements: "",
     decorationType: "",
     cateringRequirements: "",
-    selectedServices: [] as { serviceId: string; quantity: number }[],
   });
 
   const [availabilityCheck, setAvailabilityCheck] =
@@ -152,7 +150,6 @@ export const EventBookingWorkflow: React.FC = () => {
   const availablePackages = (state.eventPackages || []).filter(
     (pkg: any) => pkg.isActive
   );
-  const availableServices = state.additionalServices || [];
   const allCustomers = state.customers || [];
 
   // Filter halls based on search and filters
@@ -188,7 +185,6 @@ export const EventBookingWorkflow: React.FC = () => {
   console.log("Available data:", {
     halls: availableHalls.length,
     packages: availablePackages.length,
-    services: availableServices.length,
     customers: allCustomers.length,
     currentStep,
     bookingData,
@@ -214,15 +210,10 @@ export const EventBookingWorkflow: React.FC = () => {
     {
       number: 4,
       title: "Package & Services",
-      description: "Select package and additional services",
+      description: "Select package and pricing options",
     },
     {
       number: 5,
-      title: "Additional Services",
-      description: "Choose supplementary services",
-    },
-    {
-      number: 6,
       title: "Review & Confirmation",
       description: "Review details and confirm booking",
     },
@@ -293,20 +284,7 @@ export const EventBookingWorkflow: React.FC = () => {
       }
     }
 
-    // Add selected services cost
-    const servicesCost = bookingData.selectedServices.reduce(
-      (sum: number, selectedService: any) => {
-        const service = availableServices.find(
-          (s: any) => s.id === selectedService.serviceId
-        );
-        return (
-          sum + (service ? service.unitPrice * selectedService.quantity : 0)
-        );
-      },
-      0
-    );
-
-    return total + servicesCost;
+    return total;
   };
 
   const handleStepChange = (step: number) => {
@@ -465,7 +443,6 @@ export const EventBookingWorkflow: React.FC = () => {
         requirements: "",
         decorationType: "",
         cateringRequirements: "",
-        selectedServices: [],
       });
       setSelectedCustomer(null);
       setQuotationGenerated(false);
@@ -1196,6 +1173,10 @@ export const EventBookingWorkflow: React.FC = () => {
             (pkg.applicableEventTypes?.includes(bookingData.eventType) || true)
         );
 
+        const selectedPackageForDisplay = availablePackages.find(
+          (pkg: any) => pkg.id === bookingData.packageId
+        );
+
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -1226,19 +1207,101 @@ export const EventBookingWorkflow: React.FC = () => {
               </div>
 
               {bookingData.packageId && applicablePackages.length > 0 && (
-                <Select
-                  value={bookingData.packageId}
-                  onChange={(e) =>
-                    setBookingData({
-                      ...bookingData,
-                      packageId: e.target.value,
-                    })
-                  }
-                  options={applicablePackages.map((pkg) => ({
-                    value: pkg.id,
-                    label: `${pkg.name} - $${pkg.basePrice}`,
-                  }))}
-                />
+                <div className="space-y-4">
+                  <Select
+                    value={bookingData.packageId}
+                    onChange={(e) =>
+                      setBookingData({
+                        ...bookingData,
+                        packageId: e.target.value,
+                      })
+                    }
+                    options={applicablePackages.map((pkg) => ({
+                      value: pkg.id,
+                      label: `${pkg.name} - $${pkg.basePrice}`,
+                    }))}
+                  />
+
+                  {/* Display Selected Package Details */}
+                  {selectedPackageForDisplay && (
+                    <Card title="Package Details">
+                      <div className="p-6 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                              {selectedPackageForDisplay.name}
+                            </h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                              {selectedPackageForDisplay.description}
+                            </p>
+                            <div className="flex items-center gap-4">
+                              <div>
+                                <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                                  ${selectedPackageForDisplay.basePrice}
+                                </span>
+                                <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">
+                                  base price
+                                </span>
+                              </div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
+                                Tax: {selectedPackageForDisplay.taxRate}%
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
+                              Included Services:
+                            </h5>
+                            {selectedPackageForDisplay.includedServices &&
+                            selectedPackageForDisplay.includedServices.length >
+                              0 ? (
+                              <ul className="space-y-2">
+                                {selectedPackageForDisplay.includedServices.map(
+                                  (service: string, index: number) => (
+                                    <li
+                                      key={index}
+                                      className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
+                                    >
+                                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                      <span>{service}</span>
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                            ) : (
+                              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                                No specific services listed for this package
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {selectedPackageForDisplay.applicableEventTypes &&
+                          selectedPackageForDisplay.applicableEventTypes
+                            .length > 0 && (
+                            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                              <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                Suitable for Event Types:
+                              </h5>
+                              <div className="flex flex-wrap gap-2">
+                                {selectedPackageForDisplay.applicableEventTypes.map(
+                                  (eventType: string, index: number) => (
+                                    <span
+                                      key={index}
+                                      className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs rounded-full capitalize"
+                                    >
+                                      {eventType}
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    </Card>
+                  )}
+                </div>
               )}
 
               <div className="flex items-center gap-4">
@@ -1332,172 +1395,6 @@ export const EventBookingWorkflow: React.FC = () => {
         );
 
       case 5:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <Wrench className="w-5 h-5" />
-              Additional Services
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Select additional services to enhance your event experience.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableServices.map((service) => {
-                const isSelected = bookingData.selectedServices.some(
-                  (s) => s.serviceId === service.id
-                );
-                const selectedService = bookingData.selectedServices.find(
-                  (s) => s.serviceId === service.id
-                );
-
-                return (
-                  <Card key={service.id}>
-                    <div className="p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                            {service.name}
-                          </h4>
-                          <span className="text-sm text-blue-600 dark:text-blue-400 capitalize">
-                            {service.category}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-green-600">
-                            ${service.unitPrice.toLocaleString()}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            per {service.unit}
-                          </p>
-                        </div>
-                      </div>
-
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        {service.description}
-                      </p>
-
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id={`service-${service.id}`}
-                          checked={isSelected}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setBookingData({
-                                ...bookingData,
-                                selectedServices: [
-                                  ...bookingData.selectedServices,
-                                  { serviceId: service.id, quantity: 1 },
-                                ],
-                              });
-                            } else {
-                              setBookingData({
-                                ...bookingData,
-                                selectedServices:
-                                  bookingData.selectedServices.filter(
-                                    (s) => s.serviceId !== service.id
-                                  ),
-                              });
-                            }
-                          }}
-                          className="rounded"
-                        />
-                        <label
-                          htmlFor={`service-${service.id}`}
-                          className="text-sm font-medium"
-                        >
-                          Select Service
-                        </label>
-
-                        {isSelected && (
-                          <div className="ml-auto flex items-center gap-2">
-                            <label className="text-xs text-gray-600">
-                              Qty:
-                            </label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={selectedService?.quantity || 1}
-                              onChange={(e) => {
-                                const quantity = parseInt(e.target.value) || 1;
-                                setBookingData({
-                                  ...bookingData,
-                                  selectedServices:
-                                    bookingData.selectedServices.map((s) =>
-                                      s.serviceId === service.id
-                                        ? { ...s, quantity }
-                                        : s
-                                    ),
-                                });
-                              }}
-                              className="w-16 px-2 py-1 text-xs border rounded"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {bookingData.selectedServices.length > 0 && (
-              <Card title="Selected Services Summary">
-                <div className="p-4 space-y-3">
-                  {bookingData.selectedServices.map((selectedService) => {
-                    const service = availableServices.find(
-                      (s) => s.id === selectedService.serviceId
-                    );
-                    if (!service) return null;
-
-                    const subtotal =
-                      service.unitPrice * selectedService.quantity;
-                    return (
-                      <div
-                        key={selectedService.serviceId}
-                        className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
-                      >
-                        <div>
-                          <span className="font-medium">{service.name}</span>
-                          <span className="text-sm text-gray-500 ml-2">
-                            {selectedService.quantity}x $
-                            {service.unitPrice.toLocaleString()}
-                          </span>
-                        </div>
-                        <span className="font-semibold">
-                          ${subtotal.toLocaleString()}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  <div className="pt-3 border-t border-gray-300 dark:border-gray-600">
-                    <div className="flex justify-between items-center font-bold text-lg">
-                      <span>Services Total:</span>
-                      <span>
-                        $
-                        {bookingData.selectedServices
-                          .reduce((total, selectedService) => {
-                            const service = availableServices.find(
-                              (s) => s.id === selectedService.serviceId
-                            );
-                            return (
-                              total +
-                              (service?.unitPrice || 0) *
-                                selectedService.quantity
-                            );
-                          }, 0)
-                          .toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            )}
-          </div>
-        );
-
-      case 6:
         const selectedHall = availableHalls.find(
           (h) => h.id === bookingData.hallId
         );
@@ -1630,78 +1527,9 @@ export const EventBookingWorkflow: React.FC = () => {
                         Base Amount:
                       </span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">
-                        $
-                        {(
-                          totalAmount -
-                          bookingData.selectedServices.reduce(
-                            (sum, selectedService) => {
-                              const service = availableServices.find(
-                                (s) => s.id === selectedService.serviceId
-                              );
-                              return (
-                                sum +
-                                (service
-                                  ? service.unitPrice * selectedService.quantity
-                                  : 0)
-                              );
-                            },
-                            0
-                          )
-                        ).toFixed(2)}
+                        ${totalAmount.toFixed(2)}
                       </span>
                     </div>
-
-                    {bookingData.selectedServices.length > 0 && (
-                      <>
-                        <div className="border-t border-gray-100 dark:border-gray-600 pt-2">
-                          <div className="flex justify-between font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <span>Additional Services:</span>
-                            <span>
-                              $
-                              {bookingData.selectedServices
-                                .reduce((sum, selectedService) => {
-                                  const service = availableServices.find(
-                                    (s) => s.id === selectedService.serviceId
-                                  );
-                                  return (
-                                    sum +
-                                    (service
-                                      ? service.unitPrice *
-                                        selectedService.quantity
-                                      : 0)
-                                  );
-                                }, 0)
-                                .toLocaleString()}
-                            </span>
-                          </div>
-                          {bookingData.selectedServices.map(
-                            (selectedService) => {
-                              const service = availableServices.find(
-                                (s) => s.id === selectedService.serviceId
-                              );
-                              if (!service) return null;
-                              return (
-                                <div
-                                  key={selectedService.serviceId}
-                                  className="flex justify-between text-sm text-gray-600 dark:text-gray-400 ml-4"
-                                >
-                                  <span>
-                                    {service.name} x{selectedService.quantity}
-                                  </span>
-                                  <span>
-                                    $
-                                    {(
-                                      service.unitPrice *
-                                      selectedService.quantity
-                                    ).toLocaleString()}
-                                  </span>
-                                </div>
-                              );
-                            }
-                          )}
-                        </div>
-                      </>
-                    )}
 
                     <div className="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-2">
                       <span className="text-gray-700 dark:text-gray-300">

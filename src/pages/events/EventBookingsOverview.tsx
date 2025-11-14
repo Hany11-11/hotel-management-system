@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Calendar,
   Users,
@@ -327,10 +328,21 @@ export const EventBookingsOverview: React.FC<
             <Download className="w-4 h-4" />
             Export
           </Button>
-          <Button className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            New Booking
-          </Button>
+          {(() => {
+            const NewBookingButton: React.FC = () => {
+              const navigate = useNavigate();
+              return (
+                <Button
+                  className="flex items-center gap-2"
+                  onClick={() => navigate("/events/booking")}
+                >
+                  <Plus className="w-4 h-4" />
+                  New Booking
+                </Button>
+              );
+            };
+            return <NewBookingButton />;
+          })()}
         </div>
       </div>
 
@@ -478,7 +490,6 @@ export const EventBookingsOverview: React.FC<
               />
 
               <Button
-                variant="outline"
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all");
@@ -988,60 +999,6 @@ export const EventBookingsOverview: React.FC<
                       </div>
                     </div>
                   </Card>
-
-                  {/* Additional Services */}
-                  {(selectedEvent.decorationType ||
-                    selectedEvent.cateringRequirements ||
-                    (selectedEvent.equipmentNeeds &&
-                      selectedEvent.equipmentNeeds.length > 0)) && (
-                    <Card className="p-6">
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                        Additional Services
-                      </h3>
-                      <div className="space-y-4">
-                        {selectedEvent.decorationType && (
-                          <div>
-                            <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Decoration
-                            </label>
-                            <p className="text-gray-900 dark:text-gray-100">
-                              {selectedEvent.decorationType}
-                            </p>
-                          </div>
-                        )}
-                        {selectedEvent.cateringRequirements && (
-                          <div>
-                            <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Catering
-                            </label>
-                            <p className="text-gray-900 dark:text-gray-100">
-                              {selectedEvent.cateringRequirements}
-                            </p>
-                          </div>
-                        )}
-                        {selectedEvent.equipmentNeeds &&
-                          selectedEvent.equipmentNeeds.length > 0 && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                Equipment
-                              </label>
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                {selectedEvent.equipmentNeeds.map(
-                                  (equipment, index) => (
-                                    <span
-                                      key={index}
-                                      className="px-3 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-sm rounded-full"
-                                    >
-                                      {equipment}
-                                    </span>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                          )}
-                      </div>
-                    </Card>
-                  )}
 
                   {/* Notes */}
                   {selectedEvent.notes && (

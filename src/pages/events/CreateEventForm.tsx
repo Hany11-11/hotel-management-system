@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { Select } from "../../components/ui/Select";
 import { Modal } from "../../components/ui/Modal";
 import { Card } from "../../components/ui/Card";
 
@@ -63,7 +64,7 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
   const [formData, setFormData] = useState({
     name: event?.name || "",
     hallIds: event?.hallIds || [], // Support multiple halls
-    status: event?.status || ("active" as EventStatus),
+    status: event?.status || ("confirmed" as EventStatus),
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -210,7 +211,7 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
     setFormData({
       name: "",
       hallIds: [],
-      status: "active" as EventStatus,
+      status: "confirmed" as EventStatus,
     });
     setErrors({});
     setIsModalOpen(true);
@@ -276,27 +277,22 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
   const allEvents = state.events || [];
   const totalEvents = allEvents.length;
   const activeEvents = allEvents.filter(
-    (event) =>
-      event.status === "confirmed" ||
-      event.status === "ongoing" ||
-      event.status === "pending"
+    (event) => event.status === "confirmed"
   ).length;
   const inactiveEvents = allEvents.filter(
-    (event) => event.status === "cancelled" || event.status === "completed"
+    (event) => event.status === "cancelled"
   ).length;
 
   // Get status color for table display
   const getStatusColor = (status: string): string => {
     // Determine if event is active or inactive
-    const isActive =
-      status === "confirmed" || status === "ongoing" || status === "pending";
+    const isActive = status === "confirmed";
     return isActive ? "text-green-600 bg-green-100" : "text-red-600 bg-red-100";
   };
 
   // Get status label for display
   const getStatusLabel = (status: string): string => {
-    const isActive =
-      status === "confirmed" || status === "ongoing" || status === "pending";
+    const isActive = status === "confirmed";
     return isActive ? "Active" : "Inactive";
   };
 
@@ -311,7 +307,7 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
             Event Details
           </h3>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Event Name *
@@ -323,6 +319,26 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
                 }
                 placeholder="e.g., Corporate Conference 2024"
                 error={errors.name}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Event Status *
+              </label>
+              <Select
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    status: e.target.value as EventStatus,
+                  })
+                }
+                options={[
+                  { value: "confirmed", label: "Active" },
+                  { value: "cancelled", label: "Inactive" },
+                ]}
+                disabled={currentMode === "view"}
               />
             </div>
           </div>
@@ -580,17 +596,19 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
                             variant="outline"
                             size="sm"
                             onClick={() => handleView(event)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="flex items-center justify-center w-12 h-12 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700 border-blue-200"
+                            title="View Details"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-8 h-8" />
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEdit(event)}
-                            className="text-green-600 hover:text-green-900"
+                            className="flex items-center justify-center w-12 h-12 p-0 text-green-600 hover:bg-green-50 hover:text-green-700 border-green-200"
+                            title="Edit Event"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit2 className="w-8 h-8" />
                           </Button>
                           <Button
                             variant="outline"
@@ -599,9 +617,10 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
                               setSelectedEvent(event);
                               handleDelete();
                             }}
-                            className="text-red-600 hover:text-red-900"
+                            className="flex items-center justify-center w-12 h-12 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                            title="Delete Event"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-8 h-8" />
                           </Button>
                         </div>
                       </td>
