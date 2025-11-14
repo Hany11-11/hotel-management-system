@@ -115,216 +115,218 @@ const HallForm: React.FC<HallFormProps> = ({ hall, onClose, onSuccess }) => {
   ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Basic Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Hall Name *
-          </label>
-          <Input
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="e.g., Grand Ballroom"
-            required
-          />
+    <form onSubmit={handleSubmit} className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+        {/* Basic Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Hall Name *
+            </label>
+            <Input
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              placeholder="e.g., Grand Ballroom"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Capacity (People) *
+            </label>
+            <Input
+              type="number"
+              value={formData.capacity}
+              onChange={(e) =>
+                setFormData({ ...formData, capacity: Number(e.target.value) })
+              }
+              placeholder="0"
+              min="1"
+              required
+            />
+          </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Capacity (People) *
+            Description
           </label>
-          <Input
-            type="number"
-            value={formData.capacity}
+          <textarea
+            value={formData.description}
             onChange={(e) =>
-              setFormData({ ...formData, capacity: Number(e.target.value) })
+              setFormData({ ...formData, description: e.target.value })
             }
-            placeholder="0"
-            min="1"
-            required
+            placeholder="Detailed description of the hall..."
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
         </div>
-      </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Location *
-        </label>
-        <Input
-          value={formData.location}
-          onChange={(e) =>
-            setFormData({ ...formData, location: e.target.value })
-          }
-          placeholder="e.g., Ground Floor - East Wing"
-          required
-        />
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Price per Hour ($) *
+            </label>
+            <Input
+              type="number"
+              value={formData.pricePerHour}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  pricePerHour: Number(e.target.value),
+                })
+              }
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Description
-        </label>
-        <textarea
-          value={formData.description}
-          onChange={(e) =>
-            setFormData({ ...formData, description: e.target.value })
-          }
-          placeholder="Detailed description of the hall..."
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-        />
-      </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Price per Day ($) *
+            </label>
+            <Input
+              type="number"
+              value={formData.pricePerDay}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  pricePerDay: Number(e.target.value),
+                })
+              }
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Square Footage
+            </label>
+            <Input
+              type="number"
+              value={formData.squareFootage}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  squareFootage: Number(e.target.value),
+                })
+              }
+              placeholder="0"
+              min="0"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Setup Time (Hours)
+            </label>
+            <Input
+              type="number"
+              value={formData.setupTime}
+              onChange={(e) =>
+                setFormData({ ...formData, setupTime: Number(e.target.value) })
+              }
+              placeholder="2"
+              min="0"
+              step="0.5"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Cleanup Time (Hours)
+            </label>
+            <Input
+              type="number"
+              value={formData.cleanupTime}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  cleanupTime: Number(e.target.value),
+                })
+              }
+              placeholder="1"
+              min="0"
+              step="0.5"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Status
+            </label>
+            <Select
+              value={formData.status}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  status: e.target.value as HallStatus,
+                })
+              }
+              options={[
+                { value: "available", label: "Available" },
+                { value: "reserved", label: "Reserved" },
+                { value: "maintenance", label: "Under Maintenance" },
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* Facilities Section */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Price per Hour ($) *
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            Available Facilities
           </label>
-          <Input
-            type="number"
-            value={formData.pricePerHour}
-            onChange={(e) =>
-              setFormData({ ...formData, pricePerHour: Number(e.target.value) })
-            }
-            placeholder="0.00"
-            min="0"
-            step="0.01"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Price per Day ($) *
-          </label>
-          <Input
-            type="number"
-            value={formData.pricePerDay}
-            onChange={(e) =>
-              setFormData({ ...formData, pricePerDay: Number(e.target.value) })
-            }
-            placeholder="0.00"
-            min="0"
-            step="0.01"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Square Footage
-          </label>
-          <Input
-            type="number"
-            value={formData.squareFootage}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                squareFootage: Number(e.target.value),
-              })
-            }
-            placeholder="0"
-            min="0"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Setup Time (Hours)
-          </label>
-          <Input
-            type="number"
-            value={formData.setupTime}
-            onChange={(e) =>
-              setFormData({ ...formData, setupTime: Number(e.target.value) })
-            }
-            placeholder="2"
-            min="0"
-            step="0.5"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Cleanup Time (Hours)
-          </label>
-          <Input
-            type="number"
-            value={formData.cleanupTime}
-            onChange={(e) =>
-              setFormData({ ...formData, cleanupTime: Number(e.target.value) })
-            }
-            placeholder="1"
-            min="0"
-            step="0.5"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Status
-          </label>
-          <Select
-            value={formData.status}
-            onChange={(e) =>
-              setFormData({ ...formData, status: e.target.value as HallStatus })
-            }
-            options={[
-              { value: "available", label: "Available" },
-              { value: "reserved", label: "Reserved" },
-              { value: "maintenance", label: "Under Maintenance" },
-            ]}
-          />
-        </div>
-      </div>
-
-      {/* Facilities Section */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Available Facilities
-        </label>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {facilityOptions.map(({ key, label, icon: Icon }) => (
-            <label
-              key={key}
-              className={`flex flex-col items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                formData.availableFacilities[
-                  key as keyof typeof formData.availableFacilities
-                ]
-                  ? "border-blue-500 bg-blue-50 text-blue-700"
-                  : "border-gray-200 hover:border-gray-300"
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {facilityOptions.map(({ key, label, icon: Icon }) => (
+              <label
+                key={key}
+                className={`flex flex-col items-center p-3 border rounded-lg cursor-pointer transition-colors ${
                   formData.availableFacilities[
                     key as keyof typeof formData.availableFacilities
                   ]
-                }
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    availableFacilities: {
-                      ...formData.availableFacilities,
-                      [key]: e.target.checked,
-                    },
-                  })
-                }
-                className="sr-only"
-              />
-              <Icon className="w-6 h-6 mb-2" />
-              <span className="text-xs text-center">{label}</span>
-            </label>
-          ))}
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={
+                    formData.availableFacilities[
+                      key as keyof typeof formData.availableFacilities
+                    ]
+                  }
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      availableFacilities: {
+                        ...formData.availableFacilities,
+                        [key]: e.target.checked,
+                      },
+                    })
+                  }
+                  className="sr-only"
+                />
+                <Icon className="w-6 h-6 mb-2" />
+                <span className="text-xs text-center">{label}</span>
+              </label>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Form Actions */}
-      <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+      {/* Form Actions - Fixed at bottom */}
+      <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 sticky bottom-0">
         <Button variant="outline" onClick={onClose} type="button">
           Cancel
         </Button>
@@ -777,13 +779,15 @@ export const HallManagement: React.FC = () => {
         onClose={() => setIsCreateModalOpen(false)}
         title="Create New Hall"
       >
-        <HallForm
-          onClose={() => setIsCreateModalOpen(false)}
-          onSuccess={() => {
-            setIsCreateModalOpen(false);
-            // In a real app, this would refresh the halls list
-          }}
-        />
+        <div className="h-[80vh] flex flex-col">
+          <HallForm
+            onClose={() => setIsCreateModalOpen(false)}
+            onSuccess={() => {
+              setIsCreateModalOpen(false);
+              // In a real app, this would refresh the halls list
+            }}
+          />
+        </div>
       </Modal>
 
       {/* Edit Hall Modal */}
@@ -795,20 +799,22 @@ export const HallManagement: React.FC = () => {
         }}
         title="Edit Hall"
       >
-        {selectedHall && (
-          <HallForm
-            hall={selectedHall}
-            onClose={() => {
-              setIsEditModalOpen(false);
-              setSelectedHall(null);
-            }}
-            onSuccess={() => {
-              setIsEditModalOpen(false);
-              setSelectedHall(null);
-              // In a real app, this would refresh the halls list
-            }}
-          />
-        )}
+        <div className="h-[80vh] flex flex-col">
+          {selectedHall && (
+            <HallForm
+              hall={selectedHall}
+              onClose={() => {
+                setIsEditModalOpen(false);
+                setSelectedHall(null);
+              }}
+              onSuccess={() => {
+                setIsEditModalOpen(false);
+                setSelectedHall(null);
+                // In a real app, this would refresh the halls list
+              }}
+            />
+          )}
+        </div>
       </Modal>
 
       {/* View Hall Modal */}

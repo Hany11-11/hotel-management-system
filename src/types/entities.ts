@@ -25,6 +25,8 @@ export interface Customer {
   email: string;
   phone: string;
   nationality: string;
+  identificationType?: "nic" | "passport";
+  identificationNumber?: string;
   status?: CustomerStatus; // Optional, calculated dynamically
   createdAt: string;
   hasPremiumCard?: boolean; // Track if customer has premium card
@@ -343,6 +345,7 @@ export interface EventPackage {
   basePrice: number;
   taxRate: number;
   duration: "half-day" | "full-day" | "hourly";
+  includedHours?: number; // Number of hours included in the package
   applicableEventTypes: EventType[];
   isActive: boolean;
   createdAt: string;

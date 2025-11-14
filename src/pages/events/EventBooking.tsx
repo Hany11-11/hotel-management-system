@@ -110,6 +110,8 @@ export const EventBookingWorkflow: React.FC = () => {
     email: "",
     phone: "",
     address: "",
+    identificationType: "nic" as "nic" | "passport",
+    identificationNumber: "",
   });
 
   // Hall filter state
@@ -257,7 +259,11 @@ export const EventBookingWorkflow: React.FC = () => {
     };
   };
 
-  const calculateTotal = (): number => {
+  const calculateTotal = (): {
+    baseAmount: number;
+    overtimeCharges: number;
+    total: number;
+  } => {
     const selectedHall = availableHalls.find(
       (h: any) => h.id === bookingData.hallId
     );
@@ -265,26 +271,60 @@ export const EventBookingWorkflow: React.FC = () => {
       (p: any) => p.id === bookingData.packageId
     );
 
-    let total = 0;
+    let baseAmount = 0;
+    let overtimeCharges = 0;
 
     if (bookingData.customPricing) {
-      total = parseFloat(bookingData.customPricing);
+      baseAmount = parseFloat(bookingData.customPricing);
     } else if (selectedPackage) {
-      total = selectedPackage.basePrice;
-    } else if (selectedHall) {
+      baseAmount = selectedPackage.basePrice;
+
+      // Calculate overtime charges for packages
+      if (
+        bookingData.startDateTime &&
+        bookingData.endDateTime &&
+        selectedHall
+      ) {
+        const start = new Date(bookingData.startDateTime);
+        const end = new Date(bookingData.endDateTime);
+        const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+
+        // Package includes standard hours (e.g., 8 hours), charge for additional hours
+        const standardHours = selectedPackage.includedHours || 8;
+        if (hours > standardHours) {
+          const extraHours = Math.ceil(hours - standardHours);
+          const overtimeRate = selectedHall.pricePerHour * 1.5; // 50% surcharge for overtime
+          overtimeCharges = extraHours * overtimeRate;
+        }
+      }
+    } else if (
+      selectedHall &&
+      bookingData.startDateTime &&
+      bookingData.endDateTime
+    ) {
       // Calculate based on duration
       const start = new Date(bookingData.startDateTime);
       const end = new Date(bookingData.endDateTime);
       const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
 
       if (hours >= 8) {
-        total = selectedHall.pricePerDay;
+        baseAmount = selectedHall.pricePerDay;
+        // For daily rates, charge overtime for hours beyond 12 hours
+        if (hours > 12) {
+          const extraHours = Math.ceil(hours - 12);
+          const overtimeRate = selectedHall.pricePerHour * 1.5; // 50% surcharge for overtime
+          overtimeCharges = extraHours * overtimeRate;
+        }
       } else {
-        total = selectedHall.pricePerHour * hours;
+        baseAmount = selectedHall.pricePerHour * hours;
       }
     }
 
-    return total;
+    return {
+      baseAmount,
+      overtimeCharges,
+      total: baseAmount + overtimeCharges,
+    };
   };
 
   const handleStepChange = (step: number) => {
@@ -395,7 +435,8 @@ export const EventBookingWorkflow: React.FC = () => {
 
   const confirmBooking = async () => {
     try {
-      const totalAmount = calculateTotal();
+      const pricing = calculateTotal();
+      const totalAmount = pricing.total;
 
       const eventData = {
         name: bookingData.eventName,
@@ -403,8 +444,10 @@ export const EventBookingWorkflow: React.FC = () => {
         organizerName: selectedCustomer?.name || bookingData.organizerName,
         organizerEmail: selectedCustomer?.email || bookingData.organizerEmail,
         organizerPhone: selectedCustomer?.phone || bookingData.organizerPhone,
-        identificationType: "nic" as any,
-        identificationNumber: "123456789", // This would come from customer form
+        identificationType:
+          (selectedCustomer as any)?.identificationType || ("nic" as any),
+        identificationNumber:
+          (selectedCustomer as any)?.identificationNumber || "temp-id",
         startDateTime: bookingData.startDateTime,
         endDateTime: bookingData.endDateTime,
         expectedAttendees: parseInt(bookingData.expectedAttendees),
@@ -901,7 +944,11 @@ export const EventBookingWorkflow: React.FC = () => {
             customer.email
               .toLowerCase()
               .includes(customerSearchTerm.toLowerCase()) ||
-            (customer.phone && customer.phone.includes(customerSearchTerm))
+            (customer.phone && customer.phone.includes(customerSearchTerm)) ||
+            ((customer as any).identificationNumber &&
+              (customer as any).identificationNumber
+                .toLowerCase()
+                .includes(customerSearchTerm.toLowerCase()))
         );
 
         return (
@@ -918,7 +965,7 @@ export const EventBookingWorkflow: React.FC = () => {
             <div className="space-y-4">
               <Input
                 label="Search Customers"
-                placeholder="Search by name, email, or phone..."
+                placeholder="Search by name, email, phone, or ID number..."
                 value={customerSearchTerm}
                 onChange={(e) => setCustomerSearchTerm(e.target.value)}
               />
@@ -983,7 +1030,8 @@ export const EventBookingWorkflow: React.FC = () => {
                   <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>No customers found matching "{customerSearchTerm}"</p>
                   <p className="text-sm">
-                    Try a different search term or create a new customer.
+                    Try searching by name, email, phone, or ID number, or create
+                    a new customer.
                   </p>
                 </div>
               )}
@@ -1071,10 +1119,49 @@ export const EventBookingWorkflow: React.FC = () => {
                     />
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Select
+                      label="Identification Type *"
+                      value={newCustomerData.identificationType}
+                      onChange={(e) =>
+                        setNewCustomerData({
+                          ...newCustomerData,
+                          identificationType: e.target.value as
+                            | "nic"
+                            | "passport",
+                        })
+                      }
+                      options={[
+                        { value: "nic", label: "NIC (National Identity Card)" },
+                        { value: "passport", label: "Passport" },
+                      ]}
+                    />
+                    <Input
+                      label={`${newCustomerData.identificationType.toUpperCase()} Number *`}
+                      value={newCustomerData.identificationNumber}
+                      onChange={(e) =>
+                        setNewCustomerData({
+                          ...newCustomerData,
+                          identificationNumber: e.target.value,
+                        })
+                      }
+                      placeholder={
+                        newCustomerData.identificationType === "nic"
+                          ? "123456789V"
+                          : "A12345678"
+                      }
+                      required
+                    />
+                  </div>
+
                   <div className="flex gap-3 pt-4 border-t">
                     <Button
                       onClick={async () => {
-                        if (newCustomerData.name && newCustomerData.email) {
+                        if (
+                          newCustomerData.name &&
+                          newCustomerData.email &&
+                          newCustomerData.identificationNumber
+                        ) {
                           try {
                             const newCustomer: Customer = {
                               id: `customer-${Date.now()}`,
@@ -1082,6 +1169,10 @@ export const EventBookingWorkflow: React.FC = () => {
                               email: newCustomerData.email,
                               phone: newCustomerData.phone || "",
                               nationality: "",
+                              identificationType:
+                                newCustomerData.identificationType,
+                              identificationNumber:
+                                newCustomerData.identificationNumber,
                               createdAt: new Date().toISOString(),
                             };
 
@@ -1099,13 +1190,19 @@ export const EventBookingWorkflow: React.FC = () => {
                               email: "",
                               phone: "",
                               address: "",
+                              identificationType: "nic" as "nic" | "passport",
+                              identificationNumber: "",
                             });
                           } catch (error) {
                             console.error("Failed to create customer:", error);
                           }
                         }
                       }}
-                      disabled={!newCustomerData.name || !newCustomerData.email}
+                      disabled={
+                        !newCustomerData.name ||
+                        !newCustomerData.email ||
+                        !newCustomerData.identificationNumber
+                      }
                     >
                       Create Customer
                     </Button>
@@ -1118,6 +1215,8 @@ export const EventBookingWorkflow: React.FC = () => {
                           email: "",
                           phone: "",
                           address: "",
+                          identificationType: "nic" as "nic" | "passport",
+                          identificationNumber: "",
                         });
                       }}
                     >
@@ -1134,7 +1233,7 @@ export const EventBookingWorkflow: React.FC = () => {
                   <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Selected Guest
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Name
@@ -1157,6 +1256,28 @@ export const EventBookingWorkflow: React.FC = () => {
                       </label>
                       <p className="text-gray-900 dark:text-gray-100">
                         {selectedCustomer.phone || "Not provided"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Identification Type
+                      </label>
+                      <p className="text-gray-900 dark:text-gray-100">
+                        {(selectedCustomer as any).identificationType === "nic"
+                          ? "NIC"
+                          : (selectedCustomer as any).identificationType ===
+                            "passport"
+                          ? "Passport"
+                          : "Not provided"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        ID Number
+                      </label>
+                      <p className="text-gray-900 dark:text-gray-100">
+                        {(selectedCustomer as any).identificationNumber ||
+                          "Not provided"}
                       </p>
                     </div>
                   </div>
@@ -1401,11 +1522,25 @@ export const EventBookingWorkflow: React.FC = () => {
         const selectedPackage = availablePackages.find(
           (p) => p.id === bookingData.packageId
         );
-        const totalAmount = calculateTotal();
+        const pricing = calculateTotal();
         const taxAmount = selectedPackage
-          ? (totalAmount * selectedPackage.taxRate) / 100
-          : totalAmount * 0.085;
-        const finalTotal = totalAmount + taxAmount;
+          ? (pricing.total * selectedPackage.taxRate) / 100
+          : pricing.total * 0.085;
+        const finalTotal = pricing.total + taxAmount;
+
+        // Calculate event duration for display
+        const eventDuration =
+          bookingData.startDateTime && bookingData.endDateTime
+            ? {
+                hours:
+                  (new Date(bookingData.endDateTime).getTime() -
+                    new Date(bookingData.startDateTime).getTime()) /
+                  (1000 * 60 * 60),
+                standardHours: selectedPackage
+                  ? selectedPackage.includedHours || 8
+                  : 8,
+              }
+            : null;
 
         return (
           <div className="space-y-6">
@@ -1527,16 +1662,41 @@ export const EventBookingWorkflow: React.FC = () => {
                         Base Amount:
                       </span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">
-                        ${totalAmount.toFixed(2)}
+                        ${pricing.baseAmount.toFixed(2)}
                       </span>
                     </div>
+
+                    {pricing.overtimeCharges > 0 && (
+                      <div className="flex justify-between text-orange-600 dark:text-orange-400">
+                        <span className="flex items-center gap-1">
+                          Additional Hours Fees:
+                          <span className="text-xs text-gray-500">
+                            (
+                            {eventDuration
+                              ? (
+                                  eventDuration.hours -
+                                  eventDuration.standardHours
+                                ).toFixed(1)
+                              : "0"}{" "}
+                            hrs × $
+                            {selectedHall
+                              ? (selectedHall.pricePerHour * 1.5).toFixed(2)
+                              : "0"}
+                            )
+                          </span>
+                        </span>
+                        <span className="font-medium">
+                          +${pricing.overtimeCharges.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
 
                     <div className="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-2">
                       <span className="text-gray-700 dark:text-gray-300">
                         Subtotal:
                       </span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">
-                        ${totalAmount.toFixed(2)}
+                        ${pricing.total.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -1558,6 +1718,79 @@ export const EventBookingWorkflow: React.FC = () => {
                   </div>
                 </div>
               </Card>
+            </div>
+
+            {/* Overtime Policy Information */}
+            {eventDuration &&
+              eventDuration.hours > eventDuration.standardHours && (
+                <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="w-5 h-5 text-orange-600" />
+                    <h4 className="font-medium text-orange-800 dark:text-orange-400">
+                      Overtime Charges Applied
+                    </h4>
+                  </div>
+                  <div className="text-orange-700 dark:text-orange-300 text-sm space-y-1">
+                    <p>
+                      <strong>Event Duration:</strong>{" "}
+                      {eventDuration.hours.toFixed(1)} hours
+                    </p>
+                    <p>
+                      <strong>Standard Hours:</strong>{" "}
+                      {eventDuration.standardHours} hours{" "}
+                      {selectedPackage
+                        ? "(included in package)"
+                        : "(daily rate limit)"}
+                    </p>
+                    <p>
+                      <strong>Extra Hours:</strong>{" "}
+                      {(
+                        eventDuration.hours - eventDuration.standardHours
+                      ).toFixed(1)}{" "}
+                      hours
+                    </p>
+                    <p>
+                      <strong>Overtime Policy:</strong> Additional hours are
+                      charged at 150% of the standard hourly rate.
+                    </p>
+                    {selectedHall && (
+                      <p>
+                        <strong>Overtime Rate:</strong> $
+                        {(selectedHall.pricePerHour * 1.5).toFixed(2)}/hour
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            {/* Standard Policy Information */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <h4 className="font-medium text-blue-800 dark:text-blue-400">
+                  Pricing Policy
+                </h4>
+              </div>
+              <div className="text-blue-700 dark:text-blue-300 text-sm space-y-1">
+                <p>
+                  • Standard packages include up to{" "}
+                  {selectedPackage ? selectedPackage.includedHours || 8 : 8}{" "}
+                  hours of event time.
+                </p>
+                <p>• Daily rates cover up to 12 hours of usage.</p>
+                <p>
+                  • Additional hours beyond the standard time are charged at
+                  150% of the regular hourly rate.
+                </p>
+                <p>
+                  • Setup and breakdown time may be included in your booking
+                  duration.
+                </p>
+                <p>
+                  • All overtime charges are calculated automatically and shown
+                  in your quotation.
+                </p>
+              </div>
             </div>
 
             {/* Action Buttons */}

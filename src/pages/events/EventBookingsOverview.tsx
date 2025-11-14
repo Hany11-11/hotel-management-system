@@ -14,6 +14,11 @@ import {
   DollarSign,
   Download,
   Plus,
+  Clock,
+  CalendarDays,
+  Grid3X3,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -51,6 +56,11 @@ export const EventBookingsOverview: React.FC<
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<Event>>({});
+  const [viewType, setViewType] = useState<"list" | "calendar">("list");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [calendarViewMode, setCalendarViewMode] = useState<
+    "month" | "year" | "date"
+  >("month");
 
   // Get events from state
   const allEvents = state?.events || [];
@@ -127,6 +137,7 @@ export const EventBookingsOverview: React.FC<
         confirmed: 0,
         pending: 0,
         cancelled: 0,
+        upcoming: 0,
         totalRevenue: 0,
       };
     }
@@ -139,14 +150,135 @@ export const EventBookingsOverview: React.FC<
     const cancelled = allEvents.filter(
       (e) => e && e.status === "cancelled"
     ).length;
+
+    // Calculate upcoming events (confirmed events that haven't started yet)
+    const now = new Date();
+    const upcoming = allEvents.filter((e) => {
+      if (!e || e.status !== "confirmed" || !e.startDateTime) return false;
+      const eventStartDate = new Date(e.startDateTime);
+      return eventStartDate > now;
+    }).length;
+
     const totalRevenue = allEvents.reduce((sum, e) => {
       const revenue =
         e && typeof e.totalRevenue === "number" ? e.totalRevenue : 0;
       return sum + revenue;
     }, 0);
 
-    return { total, confirmed, pending, cancelled, totalRevenue };
+    return { total, confirmed, pending, cancelled, upcoming, totalRevenue };
   }, [allEvents]);
+
+  // Calendar utility functions
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
+  const getEventsForDate = (day: number) => {
+    const targetDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day
+    );
+
+    return filteredEvents.filter((event) => {
+      if (!event.startDateTime) return false;
+      const eventDate = new Date(event.startDateTime);
+      return (
+        eventDate.getFullYear() === targetDate.getFullYear() &&
+        eventDate.getMonth() === targetDate.getMonth() &&
+        eventDate.getDate() === targetDate.getDate()
+      );
+    });
+  };
+
+  const getEventsForMonth = (monthIndex: number) => {
+    return filteredEvents.filter((event) => {
+      if (!event.startDateTime) return false;
+      const eventDate = new Date(event.startDateTime);
+      return (
+        eventDate.getFullYear() === currentDate.getFullYear() &&
+        eventDate.getMonth() === monthIndex
+      );
+    });
+  };
+
+  const getEventsForYear = (year: number) => {
+    return filteredEvents.filter((event) => {
+      if (!event.startDateTime) return false;
+      const eventDate = new Date(event.startDateTime);
+      return eventDate.getFullYear() === year;
+    });
+  };
+
+  const getSelectedDateEvents = () => {
+    return filteredEvents.filter((event) => {
+      if (!event.startDateTime) return false;
+      const eventDate = new Date(event.startDateTime);
+      return (
+        eventDate.getFullYear() === currentDate.getFullYear() &&
+        eventDate.getMonth() === currentDate.getMonth() &&
+        eventDate.getDate() === currentDate.getDate()
+      );
+    });
+  };
+
+  const navigateMonth = (direction: "prev" | "next") => {
+    setCurrentDate((prev) => {
+      const newDate = new Date(prev);
+      if (direction === "prev") {
+        newDate.setMonth(prev.getMonth() - 1);
+      } else {
+        newDate.setMonth(prev.getMonth() + 1);
+      }
+      return newDate;
+    });
+  };
+
+  const navigateYear = (direction: "prev" | "next") => {
+    setCurrentDate((prev) => {
+      const newDate = new Date(prev);
+      if (direction === "prev") {
+        newDate.setFullYear(prev.getFullYear() - 1);
+      } else {
+        newDate.setFullYear(prev.getFullYear() + 1);
+      }
+      return newDate;
+    });
+  };
+
+  const navigateDate = (direction: "prev" | "next") => {
+    setCurrentDate((prev) => {
+      const newDate = new Date(prev);
+      if (direction === "prev") {
+        newDate.setDate(prev.getDate() - 1);
+      } else {
+        newDate.setDate(prev.getDate() + 1);
+      }
+      return newDate;
+    });
+  };
+
+  const selectMonth = (monthIndex: number) => {
+    setCurrentDate((prev) => {
+      const newDate = new Date(prev);
+      newDate.setMonth(monthIndex);
+      return newDate;
+    });
+    setCalendarViewMode("month");
+  };
+
+  const selectYear = (year: number) => {
+    setCurrentDate((prev) => {
+      const newDate = new Date(prev);
+      newDate.setFullYear(year);
+      return newDate;
+    });
+    setCalendarViewMode("year");
+  };
 
   const getStatusColor = (status: EventStatus) => {
     switch (status) {
@@ -324,6 +456,28 @@ export const EventBookingsOverview: React.FC<
           </p>
         </div>
         <div className="flex gap-3">
+          {/* View Toggle */}
+          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 gap-1">
+            <Button
+              variant={viewType === "list" ? "primary" : "outline"}
+              size="sm"
+              onClick={() => setViewType("list")}
+              className="flex items-center gap-2 px-4 py-2"
+            >
+              <Grid3X3 className="w-4 h-4" />
+              List
+            </Button>
+            <Button
+              variant={viewType === "calendar" ? "primary" : "outline"}
+              size="sm"
+              onClick={() => setViewType("calendar")}
+              className="flex items-center gap-2 px-4 py-2"
+            >
+              <CalendarDays className="w-4 h-4" />
+              Calendar
+            </Button>
+          </div>
+
           <Button variant="outline" className="flex items-center gap-2">
             <Download className="w-4 h-4" />
             Export
@@ -347,77 +501,113 @@ export const EventBookingsOverview: React.FC<
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-md transition-shadow">
-          <div className="p-4 lg:p-6">
+          <div className="p-3 lg:p-4 xl:p-5">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs lg:text-sm font-medium text-blue-700">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-blue-700 truncate">
                   Total Bookings
                 </p>
-                <p className="text-2xl lg:text-3xl font-bold text-blue-900">
+                <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-blue-900">
                   {stats.total}
                 </p>
               </div>
-              <div className="p-2 lg:p-3 bg-blue-500 rounded-full">
-                <Calendar className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
+              <div className="p-2 bg-blue-500 rounded-full ml-2 flex-shrink-0">
+                <Calendar className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-white" />
               </div>
             </div>
           </div>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-md transition-shadow">
-          <div className="p-4 lg:p-6">
+          <div className="p-3 lg:p-4 xl:p-5">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs lg:text-sm font-medium text-green-700">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-green-700 truncate">
                   Confirmed
                 </p>
-                <p className="text-2xl lg:text-3xl font-bold text-green-900">
+                <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-900">
                   {stats.confirmed}
                 </p>
               </div>
-              <div className="p-2 lg:p-3 bg-green-500 rounded-full">
-                <CheckCircle className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
+              <div className="p-2 bg-green-500 rounded-full ml-2 flex-shrink-0">
+                <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-white" />
               </div>
             </div>
           </div>
         </Card>
 
         <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 hover:shadow-md transition-shadow">
-          <div className="p-4 lg:p-6">
+          <div className="p-3 lg:p-4 xl:p-5">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs lg:text-sm font-medium text-yellow-700">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-yellow-700 truncate">
                   Pending
                 </p>
-                <p className="text-2xl lg:text-3xl font-bold text-yellow-900">
+                <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-yellow-900">
                   {stats.pending}
                 </p>
               </div>
-              <div className="p-2 lg:p-3 bg-yellow-500 rounded-full">
-                <AlertCircle className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
+              <div className="p-2 bg-yellow-500 rounded-full ml-2 flex-shrink-0">
+                <AlertCircle className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-white" />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 hover:shadow-md transition-shadow">
+          <div className="p-3 lg:p-4 xl:p-5">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-orange-700 truncate">
+                  Upcoming
+                </p>
+                <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-orange-900">
+                  {stats.upcoming}
+                </p>
+              </div>
+              <div className="p-2 bg-orange-500 rounded-full ml-2 flex-shrink-0">
+                <Clock className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-white" />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200 hover:shadow-md transition-shadow">
+          <div className="p-3 lg:p-4 xl:p-5">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-red-700 truncate">
+                  Cancelled
+                </p>
+                <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-900">
+                  {stats.cancelled}
+                </p>
+              </div>
+              <div className="p-2 bg-red-500 rounded-full ml-2 flex-shrink-0">
+                <XCircle className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-white" />
               </div>
             </div>
           </div>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-md transition-shadow">
-          <div className="p-4 lg:p-6">
+          <div className="p-3 lg:p-4 xl:p-5">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs lg:text-sm font-medium text-purple-700">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-purple-700 truncate">
                   Total Revenue
                 </p>
-                <p className="text-lg lg:text-2xl xl:text-3xl font-bold text-purple-900">
+                <p className="text-lg lg:text-xl xl:text-2xl font-bold text-purple-900">
                   $
                   {stats.totalRevenue > 1000
                     ? `${Math.round(stats.totalRevenue / 1000)}K`
                     : stats.totalRevenue.toLocaleString()}
                 </p>
               </div>
-              <div className="p-2 lg:p-3 bg-purple-500 rounded-full">
-                <DollarSign className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
+              <div className="p-2 bg-purple-500 rounded-full ml-2 flex-shrink-0">
+                <DollarSign className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-white" />
               </div>
             </div>
           </div>
@@ -506,11 +696,20 @@ export const EventBookingsOverview: React.FC<
         </div>
       </Card>
 
-      {/* Events Cards */}
+      {/* Events Content */}
       <div className="space-y-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Event Bookings ({filteredEvents.length})
+            {viewType === "calendar" && (
+              <span className="ml-2 text-lg font-normal text-gray-600 dark:text-gray-400">
+                -{" "}
+                {currentDate.toLocaleDateString("en-US", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
+            )}
           </h2>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500">
@@ -519,176 +718,556 @@ export const EventBookingsOverview: React.FC<
           </div>
         </div>
 
-        {filteredEvents.length > 0 ? (
-          <div className="grid gap-4">
-            {filteredEvents.map((event) => {
-              if (!event) return null;
+        {viewType === "list" ? (
+          /* List View */
+          filteredEvents.length > 0 ? (
+            <div className="grid gap-4">
+              {filteredEvents.map((event) => {
+                if (!event) return null;
 
-              const startDateTime = formatDateTime(event.startDateTime || "");
-              const endDateTime = formatDateTime(event.endDateTime || "");
+                const startDateTime = formatDateTime(event.startDateTime || "");
+                const endDateTime = formatDateTime(event.endDateTime || "");
 
-              return (
-                <Card
-                  key={event.id}
-                  className="p-6 hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500"
+                return (
+                  <Card
+                    key={event.id}
+                    className="p-6 hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500"
+                  >
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                      {/* Event Details */}
+                      <div className="lg:col-span-3">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                          {event.name || "Untitled Event"}
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 capitalize mb-2">
+                          {event.type || "other"} event
+                        </p>
+                        <span
+                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            event.status || "pending"
+                          )}`}
+                        >
+                          {getStatusIcon(event.status || "pending")}
+                          {(event.status || "pending").charAt(0).toUpperCase() +
+                            (event.status || "pending").slice(1)}
+                        </span>
+                      </div>
+
+                      {/* Organizer Info */}
+                      <div className="lg:col-span-2">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Users className="w-4 h-4 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              {event.organizerName || "Unknown Organizer"}
+                            </p>
+                            {event.organizerEmail && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                {event.organizerEmail}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Date & Time */}
+                      <div className="lg:col-span-2">
+                        <div className="flex items-start gap-2">
+                          <Calendar className="w-4 h-4 text-gray-400 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              {startDateTime.date || "No date"}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {startDateTime.time}
+                              {endDateTime.time &&
+                                endDateTime.time !== startDateTime.time && (
+                                  <span> - {endDateTime.time}</span>
+                                )}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Venue */}
+                      <div className="lg:col-span-2">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-gray-400" />
+                          <div>
+                            <p className="text-sm text-gray-900 dark:text-gray-100">
+                              {getHallNames(event.hallIds)}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {event.expectedAttendees || 0} attendees
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Revenue */}
+                      <div className="lg:col-span-1">
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-green-600">
+                            ${(event.totalRevenue || 0).toLocaleString()}
+                          </p>
+                          <p className="text-xs text-gray-500">Revenue</p>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="lg:col-span-2">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleViewDetails(event);
+                            }}
+                            className="flex items-center justify-center w-12 h-12 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700 border-blue-200"
+                            title="View Details"
+                          >
+                            <Eye className="w-8 h-8" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleEdit(event);
+                            }}
+                            className="flex items-center justify-center w-12 h-12 p-0 text-green-600 hover:bg-green-50 hover:text-green-700 border-green-200"
+                            title="Edit Event"
+                          >
+                            <Edit className="w-8 h-8" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDelete(
+                                event.id,
+                                event.name || "Unnamed Event"
+                              );
+                            }}
+                            className="flex items-center justify-center w-12 h-12 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                            title="Delete Event"
+                          >
+                            <Trash2 className="w-8 h-8" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="p-12">
+              <div className="text-center">
+                <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-6" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                  No events found
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
+                  {searchTerm ||
+                  statusFilter !== "all" ||
+                  typeFilter !== "all" ||
+                  dateFilter !== "all"
+                    ? "Try adjusting your search criteria or filters to find events."
+                    : "Get started by creating your first event booking."}
+                </p>
+                {!searchTerm &&
+                  statusFilter === "all" &&
+                  typeFilter === "all" &&
+                  dateFilter === "all" && (
+                    <Button className="flex items-center gap-2 mx-auto">
+                      <Plus className="w-4 h-4" />
+                      Create New Event
+                    </Button>
+                  )}
+              </div>
+            </Card>
+          )
+        ) : (
+          /* Calendar View */
+          <Card className="p-6">
+            {/* Calendar Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+              <div className="flex items-center gap-4">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  {calendarViewMode === "year"
+                    ? currentDate.getFullYear()
+                    : calendarViewMode === "date"
+                    ? currentDate.toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : currentDate.toLocaleDateString("en-US", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                </h3>
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      calendarViewMode === "year"
+                        ? navigateYear("prev")
+                        : calendarViewMode === "date"
+                        ? navigateDate("prev")
+                        : navigateMonth("prev")
+                    }
+                    className="p-2"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      calendarViewMode === "year"
+                        ? navigateYear("next")
+                        : calendarViewMode === "date"
+                        ? navigateDate("next")
+                        : navigateMonth("next")
+                    }
+                    className="p-2"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Calendar View Mode Selector */}
+                <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 gap-1">
+                  <Button
+                    variant={
+                      calendarViewMode === "year" ? "primary" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => setCalendarViewMode("year")}
+                    className="px-4 py-2 text-xs"
+                  >
+                    Year
+                  </Button>
+                  <Button
+                    variant={
+                      calendarViewMode === "month" ? "primary" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => setCalendarViewMode("month")}
+                    className="px-4 py-2 text-xs"
+                  >
+                    Month
+                  </Button>
+                  <Button
+                    variant={
+                      calendarViewMode === "date" ? "primary" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => setCalendarViewMode("date")}
+                    className="px-4 py-2 text-xs"
+                  >
+                    Date
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCurrentDate(new Date());
+                    setCalendarViewMode("month");
+                  }}
+                  className="text-sm"
                 >
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-                    {/* Event Details */}
-                    <div className="lg:col-span-3">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                        {event.name || "Untitled Event"}
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 capitalize mb-2">
-                        {event.type || "other"} event
-                      </p>
-                      <span
-                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          event.status || "pending"
-                        )}`}
-                      >
-                        {getStatusIcon(event.status || "pending")}
-                        {(event.status || "pending").charAt(0).toUpperCase() +
-                          (event.status || "pending").slice(1)}
+                  Today
+                </Button>
+              </div>
+            </div>
+
+            {/* Calendar Content */}
+            {calendarViewMode === "year" ? (
+              /* Year View - Show 12 months */
+              <div className="grid grid-cols-3 gap-4">
+                {Array.from({ length: 12 }, (_, monthIndex) => {
+                  const monthEvents = getEventsForMonth(monthIndex);
+                  const monthName = new Date(
+                    currentDate.getFullYear(),
+                    monthIndex,
+                    1
+                  ).toLocaleDateString("en-US", { month: "long" });
+
+                  return (
+                    <div
+                      key={monthIndex}
+                      className="cursor-pointer"
+                      onClick={() => selectMonth(monthIndex)}
+                    >
+                      <Card className="p-4 hover:shadow-md transition-shadow">
+                        <div className="text-center">
+                          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            {monthName}
+                          </h4>
+                          <div className="text-2xl font-bold text-blue-600 mb-2">
+                            {monthEvents.length}
+                          </div>
+                          <div className="text-xs text-gray-500">Events</div>
+
+                          {monthEvents.length > 0 && (
+                            <div className="mt-3 space-y-1">
+                              {monthEvents.slice(0, 3).map((event: Event) => (
+                                <div
+                                  key={event.id}
+                                  className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 truncate"
+                                >
+                                  {event.name || "Untitled Event"}
+                                </div>
+                              ))}
+                              {monthEvents.length > 3 && (
+                                <div className="text-xs text-gray-500">
+                                  +{monthEvents.length - 3} more
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : calendarViewMode === "date" ? (
+              /* Date View - Show events for selected date */
+              <div className="space-y-4">
+                <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <Calendar className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+                  <h4 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    {currentDate.toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {getSelectedDateEvents().length} events scheduled
+                  </p>
+                </div>
+
+                {getSelectedDateEvents().length > 0 ? (
+                  <div className="grid gap-4">
+                    {getSelectedDateEvents().map((event: Event) => {
+                      const startDateTime = formatDateTime(
+                        event.startDateTime || ""
+                      );
+                      const endDateTime = formatDateTime(
+                        event.endDateTime || ""
+                      );
+
+                      return (
+                        <div
+                          key={event.id}
+                          className="cursor-pointer"
+                          onClick={() => handleViewDetails(event)}
+                        >
+                          <Card className="p-4 hover:shadow-lg transition-shadow">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                  {event.name || "Untitled Event"}
+                                </h4>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                  {startDateTime.time}
+                                  {endDateTime.time &&
+                                    endDateTime.time !== startDateTime.time && (
+                                      <span> - {endDateTime.time}</span>
+                                    )}
+                                </p>
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                    event.status || "pending"
+                                  )}`}
+                                >
+                                  {getStatusIcon(event.status || "pending")}
+                                  {(event.status || "pending")
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                    (event.status || "pending").slice(1)}
+                                </span>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                  {event.organizerName || "Unknown Organizer"}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {event.expectedAttendees || 0} attendees
+                                </p>
+                              </div>
+                            </div>
+                          </Card>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      No events scheduled for this date
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Month View - Traditional calendar grid */
+              <div className="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
+                {/* Day Headers */}
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                  (day) => (
+                    <div
+                      key={day}
+                      className="bg-gray-50 dark:bg-gray-800 p-3 text-center"
+                    >
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {day}
                       </span>
                     </div>
+                  )
+                )}
 
-                    {/* Organizer Info */}
-                    <div className="lg:col-span-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Users className="w-4 h-4 text-gray-400" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {event.organizerName || "Unknown Organizer"}
-                          </p>
-                          {event.organizerEmail && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                              {event.organizerEmail}
-                            </p>
+                {/* Calendar Days */}
+                {(() => {
+                  const daysInMonth = getDaysInMonth(currentDate);
+                  const firstDay = getFirstDayOfMonth(currentDate);
+                  const days = [];
+
+                  // Empty cells for days before the first day of month
+                  for (let i = 0; i < firstDay; i++) {
+                    days.push(
+                      <div
+                        key={`empty-${i}`}
+                        className="bg-white dark:bg-gray-900 h-32 p-2"
+                      ></div>
+                    );
+                  }
+
+                  // Days of the month
+                  for (let day = 1; day <= daysInMonth; day++) {
+                    const dayEvents = getEventsForDate(day);
+                    const isToday =
+                      new Date().getFullYear() === currentDate.getFullYear() &&
+                      new Date().getMonth() === currentDate.getMonth() &&
+                      new Date().getDate() === day;
+
+                    days.push(
+                      <div
+                        key={day}
+                        className={`bg-white dark:bg-gray-900 h-32 p-2 border-t border-gray-200 dark:border-gray-700 overflow-hidden ${
+                          isToday ? "ring-2 ring-blue-500" : ""
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <span
+                            className={`text-sm font-medium ${
+                              isToday
+                                ? "bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center"
+                                : "text-gray-900 dark:text-gray-100"
+                            }`}
+                          >
+                            {day}
+                          </span>
+                          {dayEvents.length > 0 && (
+                            <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                              {dayEvents.length}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Events for this day */}
+                        <div className="space-y-1">
+                          {dayEvents.slice(0, 3).map((event) => {
+                            const startTime = event.startDateTime
+                              ? new Date(
+                                  event.startDateTime
+                                ).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "";
+
+                            return (
+                              <div
+                                key={event.id}
+                                onClick={() => handleViewDetails(event)}
+                                className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${
+                                  event.status === "confirmed"
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                                    : event.status === "pending"
+                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+                                    : event.status === "cancelled"
+                                    ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+                                    : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                                }`}
+                              >
+                                <div className="font-medium truncate">
+                                  {event.name || "Untitled Event"}
+                                </div>
+                                {startTime && (
+                                  <div className="opacity-75">{startTime}</div>
+                                )}
+                              </div>
+                            );
+                          })}
+
+                          {/* Show "+X more" if there are more events */}
+                          {dayEvents.length > 3 && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 p-1">
+                              +{dayEvents.length - 3} more
+                            </div>
                           )}
                         </div>
                       </div>
-                    </div>
+                    );
+                  }
 
-                    {/* Date & Time */}
-                    <div className="lg:col-span-2">
-                      <div className="flex items-start gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {startDateTime.date || "No date"}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {startDateTime.time}
-                            {endDateTime.time &&
-                              endDateTime.time !== startDateTime.time && (
-                                <span> - {endDateTime.time}</span>
-                              )}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                  return days;
+                })()}
+              </div>
+            )}
 
-                    {/* Venue */}
-                    <div className="lg:col-span-2">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-900 dark:text-gray-100">
-                            {getHallNames(event.hallIds)}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {event.expectedAttendees || 0} attendees
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Revenue */}
-                    <div className="lg:col-span-1">
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-green-600">
-                          ${(event.totalRevenue || 0).toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-500">Revenue</p>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="lg:col-span-2">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleViewDetails(event);
-                          }}
-                          className="flex items-center justify-center w-12 h-12 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700 border-blue-200"
-                          title="View Details"
-                        >
-                          <Eye className="w-8 h-8" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleEdit(event);
-                          }}
-                          className="flex items-center justify-center w-12 h-12 p-0 text-green-600 hover:bg-green-50 hover:text-green-700 border-green-200"
-                          title="Edit Event"
-                        >
-                          <Edit className="w-8 h-8" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleDelete(
-                              event.id,
-                              event.name || "Unnamed Event"
-                            );
-                          }}
-                          className="flex items-center justify-center w-12 h-12 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
-                          title="Delete Event"
-                        >
-                          <Trash2 className="w-8 h-8" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        ) : (
-          <Card className="p-12">
-            <div className="text-center">
-              <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                No events found
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">
-                {searchTerm ||
-                statusFilter !== "all" ||
-                typeFilter !== "all" ||
-                dateFilter !== "all"
-                  ? "Try adjusting your search criteria or filters to find events."
-                  : "Get started by creating your first event booking."}
-              </p>
-              {!searchTerm &&
-                statusFilter === "all" &&
-                typeFilter === "all" &&
-                dateFilter === "all" && (
-                  <Button className="flex items-center gap-2 mx-auto">
-                    <Plus className="w-4 h-4" />
-                    Create New Event
-                  </Button>
-                )}
+            {/* Calendar Legend */}
+            <div className="mt-4 flex flex-wrap gap-4 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-green-100 border border-green-200 rounded"></div>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Confirmed
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-yellow-100 border border-yellow-200 rounded"></div>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Pending
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Cancelled
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-blue-100 border border-blue-200 rounded"></div>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Completed
+                </span>
+              </div>
             </div>
           </Card>
         )}

@@ -8,6 +8,8 @@ import {
   Eye,
   Search,
   CheckCircle,
+  Filter,
+  X,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -44,7 +46,16 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
   >(mode);
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(event);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewingEvent, setIsViewingEvent] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter state
+  const [filters, setFilters] = useState({
+    name: "",
+    hall: "",
+    status: "", // "" for all, "confirmed" for active, "cancelled" for inactive
+  });
+  const [showFilters, setShowFilters] = useState(false);
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
 
@@ -238,6 +249,7 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
       status: event.status,
     });
     setErrors({});
+    setIsViewingEvent(true);
     setIsModalOpen(true);
   };
 
@@ -245,6 +257,7 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
     setIsModalOpen(false);
     setSelectedEvent(undefined);
     setCurrentMode("list");
+    setIsViewingEvent(false);
     if (onClose) onClose();
   };
 
@@ -252,7 +265,26 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
     setIsModalOpen(false);
     setSelectedEvent(undefined);
     setCurrentMode("list");
+    setIsViewingEvent(false);
     if (onSuccess) onSuccess();
+  };
+
+  // Filter handlers
+  const handleFilterChange = (field: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const clearAllFilters = () => {
+    setFilters({
+      name: "",
+      hall: "",
+      status: "",
+    });
+    setSearchTerm("");
+  };
+
+  const hasActiveFilters = () => {
+    return filters.name || filters.hall || filters.status || searchTerm;
   };
 
   const selectedHallNames = formData.hallIds
@@ -263,15 +295,35 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
     .filter(Boolean)
     .join(", ");
 
-  // Filter events based on search term
-  const filteredEvents = (state.events || []).filter(
-    (event) =>
+  // Filter events based on search term and filters
+  const filteredEvents = (state.events || []).filter((event) => {
+    // Search term filter (searches in name and halls)
+    const searchMatch =
+      !searchTerm ||
       event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (event.hallIds || []).some((hallId) => {
         const hall = availableHalls.find((h) => h.id === hallId);
         return hall?.name.toLowerCase().includes(searchTerm.toLowerCase());
-      })
-  );
+      });
+
+    // Name filter
+    const nameMatch =
+      !filters.name ||
+      event.name.toLowerCase().includes(filters.name.toLowerCase());
+
+    // Hall filter
+    const hallMatch =
+      !filters.hall ||
+      (event.hallIds || []).some((hallId) => {
+        const hall = availableHalls.find((h) => h.id === hallId);
+        return hall?.name.toLowerCase().includes(filters.hall.toLowerCase());
+      });
+
+    // Status filter
+    const statusMatch = !filters.status || event.status === filters.status;
+
+    return searchMatch && nameMatch && hallMatch && statusMatch;
+  });
 
   // Calculate statistics
   const allEvents = state.events || [];
@@ -319,6 +371,7 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
                 }
                 placeholder="e.g., Corporate Conference 2024"
                 error={errors.name}
+                disabled={currentMode === "view"}
               />
             </div>
 
@@ -356,17 +409,19 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
               <label className="block text-sm font-medium text-gray-700">
                 Select Halls * (Multiple halls can be selected)
               </label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleSelectAllHalls}
-                className="text-xs"
-              >
-                {formData.hallIds.length === availableHalls.length
-                  ? "Deselect All"
-                  : "Select All"}
-              </Button>
+              {currentMode !== "view" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAllHalls}
+                  className="text-xs"
+                >
+                  {formData.hallIds.length === availableHalls.length
+                    ? "Deselect All"
+                    : "Select All"}
+                </Button>
+              )}
             </div>
 
             {/* Display selected halls by name */}
@@ -387,11 +442,16 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
                     id={`hall-${hall.id}`}
                     checked={formData.hallIds.includes(hall.id)}
                     onChange={() => handleHallToggle(hall.id)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    disabled={currentMode === "view"}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <label
                     htmlFor={`hall-${hall.id}`}
-                    className="flex-1 text-sm text-gray-700 cursor-pointer"
+                    className={`flex-1 text-sm text-gray-700 ${
+                      currentMode === "view"
+                        ? "cursor-default"
+                        : "cursor-pointer"
+                    }`}
                   >
                     <span className="font-medium">{hall.name}</span>
                     <span className="text-gray-500 ml-2">
@@ -445,10 +505,12 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
           <h2 className="text-2xl font-bold text-gray-900">Event Management</h2>
           <p className="text-gray-600">Create, view, edit, and delete events</p>
         </div>
-        <Button onClick={handleCreate} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Create Event
-        </Button>
+        {!isViewingEvent && (
+          <Button onClick={handleCreate} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Create Event
+          </Button>
+        )}
       </div>
 
       {/* Statistics Cards */}
@@ -499,21 +561,133 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
         </Card>
       </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            type="text"
-            placeholder="Search events by name or hall..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+      {/* Search Bar and Filters */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search events by name or hall..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2"
+          >
+            <Filter className="w-4 h-4" />
+            Filters
+            {hasActiveFilters() && (
+              <span className="ml-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {
+                  [
+                    filters.name,
+                    filters.hall,
+                    filters.status,
+                    searchTerm,
+                  ].filter(Boolean).length
+                }
+              </span>
+            )}
+          </Button>
+          {hasActiveFilters() && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={clearAllFilters}
+              className="flex items-center gap-2 text-gray-600"
+            >
+              <X className="w-4 h-4" />
+              Clear All
+            </Button>
+          )}
+          <div className="text-sm text-gray-500">
+            {filteredEvents.length} event(s) found
+          </div>
         </div>
-        <div className="text-sm text-gray-500">
-          {filteredEvents.length} event(s) found
-        </div>
+
+        {/* Filter Panel */}
+        {showFilters && (
+          <Card className="p-4 bg-gray-50 border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Filter by Name
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Event name..."
+                  value={filters.name}
+                  onChange={(e) => handleFilterChange("name", e.target.value)}
+                  className="text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Filter by Hall
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Hall name..."
+                  value={filters.hall}
+                  onChange={(e) => handleFilterChange("hall", e.target.value)}
+                  className="text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Filter by Status
+                </label>
+                <Select
+                  value={filters.status}
+                  onChange={(e) => handleFilterChange("status", e.target.value)}
+                  options={[
+                    { value: "", label: "All Statuses" },
+                    { value: "confirmed", label: "Active" },
+                    { value: "cancelled", label: "Inactive" },
+                  ]}
+                  className="text-sm"
+                />
+              </div>
+            </div>
+
+            {hasActiveFilters() && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span>Active filters:</span>
+                  {searchTerm && (
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                      Search: "{searchTerm}"
+                    </span>
+                  )}
+                  {filters.name && (
+                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                      Name: "{filters.name}"
+                    </span>
+                  )}
+                  {filters.hall && (
+                    <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">
+                      Hall: "{filters.hall}"
+                    </span>
+                  )}
+                  {filters.status && (
+                    <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
+                      Status:{" "}
+                      {filters.status === "confirmed" ? "Active" : "Inactive"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card>
+        )}
       </div>
 
       {/* Events Table */}
