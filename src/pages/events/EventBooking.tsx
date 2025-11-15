@@ -166,7 +166,12 @@ export const EventBookingWorkflow: React.FC = () => {
           facility.toLowerCase().includes(hallSearchTerm.toLowerCase())
         );
 
-      return matchesSearch;
+      // Capacity filter - only show halls that can accommodate expected attendees
+      const expectedAttendees = parseInt(bookingData.expectedAttendees) || 0;
+      const hasCapacity =
+        expectedAttendees === 0 || hall.capacity >= expectedAttendees;
+
+      return matchesSearch && hasCapacity;
     })
     .sort((a: any, b: any) => {
       // Apply sorting if selected
@@ -826,9 +831,22 @@ export const EventBookingWorkflow: React.FC = () => {
                 </Button>
               )}
 
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Showing {filteredHalls.length} of {availableHalls.length}{" "}
-                available halls
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {filteredHalls.length} of {availableHalls.length}{" "}
+                  available halls
+                  {bookingData.expectedAttendees && (
+                    <span className="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+                      (filtered for {bookingData.expectedAttendees} attendees)
+                    </span>
+                  )}
+                </div>
+                {bookingData.expectedAttendees && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Only showing halls with capacity ≥{" "}
+                    {bookingData.expectedAttendees} people
+                  </div>
+                )}
               </div>
             </div>
 
@@ -852,11 +870,41 @@ export const EventBookingWorkflow: React.FC = () => {
                 <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
                   <MapPin className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-medium mb-2">No halls found</h3>
+                <h3 className="text-lg font-medium mb-2">
+                  {parseInt(bookingData.expectedAttendees) > 0 &&
+                  availableHalls.length > 0
+                    ? "No halls available for your group size"
+                    : "No halls found"}
+                </h3>
                 <p className="text-sm">
-                  Try adjusting your search criteria or filters to find suitable
-                  halls.
+                  {parseInt(bookingData.expectedAttendees) > 0 &&
+                  availableHalls.length > 0
+                    ? `No halls can accommodate ${bookingData.expectedAttendees} attendees. Try reducing the number of attendees or contact us for larger venue options.`
+                    : "Try adjusting your search criteria or filters to find suitable halls."}
                 </p>
+                {parseInt(bookingData.expectedAttendees) > 0 &&
+                  availableHalls.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-xs text-gray-400 mb-2">
+                        Available hall capacities:
+                      </p>
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {availableHalls.slice(0, 5).map((hall: any) => (
+                          <span
+                            key={hall.id}
+                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md text-xs"
+                          >
+                            {hall.name}: {hall.capacity} people
+                          </span>
+                        ))}
+                        {availableHalls.length > 5 && (
+                          <span className="text-xs text-gray-400">
+                            +{availableHalls.length - 5} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -876,11 +924,24 @@ export const EventBookingWorkflow: React.FC = () => {
                           <h4 className="font-semibold text-gray-900 dark:text-gray-100">
                             {hall.name}
                           </h4>
-                          <div className="flex items-center gap-1">
-                            <Users className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              {hall.capacity}
+                          <div
+                            className={`flex items-center gap-1 px-2 py-1 rounded-md ${
+                              parseInt(bookingData.expectedAttendees) > 0 &&
+                              hall.capacity >=
+                                parseInt(bookingData.expectedAttendees)
+                                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                            }`}
+                          >
+                            <Users className="w-4 h-4" />
+                            <span className="text-sm font-medium">
+                              {hall.capacity} capacity
                             </span>
+                            {parseInt(bookingData.expectedAttendees) > 0 &&
+                              hall.capacity >=
+                                parseInt(bookingData.expectedAttendees) && (
+                                <span className="ml-1 text-xs">✓</span>
+                              )}
                           </div>
                         </div>
 
