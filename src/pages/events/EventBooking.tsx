@@ -37,7 +37,7 @@ const BookingStep: React.FC<BookingStepProps> = ({
   description,
 }) => (
   <div
-    className={`flex flex-col items-center text-center p-4 rounded-lg border-2 transition-colors min-h-[120px] ${
+    className={`flex flex-col items-center text-center p-4 rounded-lg border-2 transition-colors h-32 ${
       isActive
         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400"
         : isCompleted
@@ -46,7 +46,7 @@ const BookingStep: React.FC<BookingStepProps> = ({
     }`}
   >
     <div
-      className={`flex items-center justify-center w-10 h-10 rounded-full font-bold mb-3 ${
+      className={`flex items-center justify-center w-10 h-10 rounded-full font-bold mb-3 flex-shrink-0 ${
         isActive
           ? "bg-blue-500 text-white"
           : isCompleted
@@ -56,7 +56,7 @@ const BookingStep: React.FC<BookingStepProps> = ({
     >
       {isCompleted ? <CheckCircle className="w-5 h-5" /> : stepNumber}
     </div>
-    <div className="flex-1">
+    <div className="flex-1 flex flex-col justify-center">
       <h3
         className={`font-semibold text-sm mb-1 ${
           isActive
@@ -1858,7 +1858,7 @@ export const EventBookingWorkflow: React.FC = () => {
       </div>
 
       {/* Progress Steps */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         {steps.map((step) => (
           <div
             key={step.number}
