@@ -518,73 +518,7 @@ export const EventBookingWorkflow: React.FC = () => {
               </p>
             </div>
 
-            {/* Event Basic Information */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    Event Information
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Basic details about your event
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="lg:col-span-1">
-                  <Input
-                    label="Event Name *"
-                    value={bookingData.eventName}
-                    onChange={(e) =>
-                      setBookingData({
-                        ...bookingData,
-                        eventName: e.target.value,
-                      })
-                    }
-                    required
-                    placeholder="e.g., Annual Company Gala, Wedding Reception, Product Launch"
-                    className="text-lg"
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Choose a memorable name that describes your event
-                  </p>
-                </div>
-
-                <div className="lg:col-span-1">
-                  <Select
-                    label="Event Type *"
-                    value={bookingData.eventType}
-                    onChange={(e) =>
-                      setBookingData({
-                        ...bookingData,
-                        eventType: e.target.value as EventType,
-                      })
-                    }
-                    options={[
-                      { value: "conference", label: "🏢 Conference" },
-                      { value: "wedding", label: "💒 Wedding" },
-                      { value: "seminar", label: "📚 Seminar" },
-                      { value: "corporate", label: "🏛️ Corporate Event" },
-                      { value: "birthday", label: "🎂 Birthday Party" },
-                      { value: "anniversary", label: "💑 Anniversary" },
-                      { value: "meeting", label: "🤝 Meeting" },
-                      { value: "workshop", label: "🛠️ Workshop" },
-                      { value: "gala", label: "✨ Gala" },
-                      { value: "other", label: "📝 Other" },
-                    ]}
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    This helps us suggest the right packages and services
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Event Timing */}
+            {/* Event Timing - Now First */}
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
@@ -677,18 +611,22 @@ export const EventBookingWorkflow: React.FC = () => {
                       {(() => {
                         const start = new Date(bookingData.startDateTime);
                         const end = new Date(bookingData.endDateTime);
-                        const diffMs = end.getTime() - start.getTime();
-                        const diffHours =
-                          Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10;
-                        const diffDays = Math.floor(diffHours / 24);
-                        const remainingHours = diffHours % 24;
+                        const hours = Math.ceil(
+                          (end.getTime() - start.getTime()) / (1000 * 60 * 60)
+                        );
+                        const days = Math.floor(hours / 24);
+                        const remainingHours = hours % 24;
 
-                        if (diffDays > 0) {
-                          return `${diffDays} day${diffDays > 1 ? "s" : ""} ${
-                            remainingHours > 0 ? `${remainingHours} hours` : ""
+                        if (days > 0) {
+                          return `${days} day${days > 1 ? "s" : ""} ${
+                            remainingHours > 0
+                              ? `${remainingHours} hour${
+                                  remainingHours > 1 ? "s" : ""
+                                }`
+                              : ""
                           }`;
                         } else {
-                          return `${diffHours} hour${diffHours > 1 ? "s" : ""}`;
+                          return `${hours} hour${hours > 1 ? "s" : ""}`;
                         }
                       })()}
                     </span>
@@ -697,7 +635,73 @@ export const EventBookingWorkflow: React.FC = () => {
               )}
             </div>
 
-            {/* Additional Details */}
+            {/* Event Basic Information - Now Second */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Event Information
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Basic details about your event
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="lg:col-span-1">
+                  <Input
+                    label="Event Name *"
+                    value={bookingData.eventName}
+                    onChange={(e) =>
+                      setBookingData({
+                        ...bookingData,
+                        eventName: e.target.value,
+                      })
+                    }
+                    required
+                    placeholder="e.g., Annual Company Gala, Wedding Reception, Product Launch"
+                    className="text-lg"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Choose a memorable name that describes your event
+                  </p>
+                </div>
+
+                <div className="lg:col-span-1">
+                  <Select
+                    label="Event Type *"
+                    value={bookingData.eventType}
+                    onChange={(e) =>
+                      setBookingData({
+                        ...bookingData,
+                        eventType: e.target.value as EventType,
+                      })
+                    }
+                    options={[
+                      { value: "conference", label: "🏢 Conference" },
+                      { value: "wedding", label: "💒 Wedding" },
+                      { value: "seminar", label: "📚 Seminar" },
+                      { value: "corporate", label: "🏛️ Corporate Event" },
+                      { value: "birthday", label: "🎂 Birthday Party" },
+                      { value: "anniversary", label: "💑 Anniversary" },
+                      { value: "meeting", label: "🤝 Meeting" },
+                      { value: "workshop", label: "🛠️ Workshop" },
+                      { value: "gala", label: "✨ Gala" },
+                      { value: "other", label: "📝 Other" },
+                    ]}
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    This helps us suggest the right packages and services
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Details - Now Third */}
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
@@ -935,13 +939,8 @@ export const EventBookingWorkflow: React.FC = () => {
                           >
                             <Users className="w-4 h-4" />
                             <span className="text-sm font-medium">
-                              {hall.capacity} capacity
+                              {hall.capacity}
                             </span>
-                            {parseInt(bookingData.expectedAttendees) > 0 &&
-                              hall.capacity >=
-                                parseInt(bookingData.expectedAttendees) && (
-                                <span className="ml-1 text-xs">✓</span>
-                              )}
                           </div>
                         </div>
 
@@ -957,29 +956,24 @@ export const EventBookingWorkflow: React.FC = () => {
                             Facilities:
                           </h5>
                           <div className="flex flex-wrap gap-1">
-                            {hall.facilities.slice(0, 3).map((facility) => (
+                            {hall.facilities.map((facility: string) => (
                               <span
                                 key={facility}
-                                className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded"
+                                className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-md"
                               >
                                 {facility}
                               </span>
                             ))}
-                            {hall.facilities.length > 3 && (
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                +{hall.facilities.length - 3} more
-                              </span>
-                            )}
                           </div>
                         </div>
 
                         <div className="flex justify-between items-center">
                           <div>
-                            <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                              ${hall.pricePerHour}/hr
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              ${hall.pricePerHour}/hour
                             </span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-                              ${hall.pricePerDay}/day
+                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                              or ${hall.pricePerDay}/day
                             </span>
                           </div>
                           {bookingData.hallId === hall.id &&
@@ -1037,21 +1031,23 @@ export const EventBookingWorkflow: React.FC = () => {
                     {filteredCustomers.map((customer) => (
                       <div
                         key={customer.id}
-                        className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                           selectedCustomer?.id === customer.id
-                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                            : "border-gray-200 dark:border-gray-600"
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400"
+                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                         }`}
                         onClick={() => {
                           setSelectedCustomer(customer);
                           setBookingData({
                             ...bookingData,
                             guestId: customer.id,
+                            organizerName: customer.name,
+                            organizerEmail: customer.email,
+                            organizerPhone: customer.phone || "",
                           });
-                          setCustomerSearchTerm("");
                         }}
                       >
-                        <div className="flex justify-between items-center">
+                        <div className="flex items-center justify-between">
                           <div>
                             <h4 className="font-medium text-gray-900 dark:text-gray-100">
                               {customer.name}
@@ -1060,25 +1056,14 @@ export const EventBookingWorkflow: React.FC = () => {
                               {customer.email}
                             </p>
                             {customer.phone && (
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
                                 {customer.phone}
                               </p>
                             )}
                           </div>
-                          <Button
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedCustomer(customer);
-                              setBookingData({
-                                ...bookingData,
-                                guestId: customer.id,
-                              });
-                              setCustomerSearchTerm("");
-                            }}
-                          >
-                            Select
-                          </Button>
+                          {selectedCustomer?.id === customer.id && (
+                            <CheckCircle className="w-5 h-5 text-blue-500" />
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1223,40 +1208,28 @@ export const EventBookingWorkflow: React.FC = () => {
                           newCustomerData.email &&
                           newCustomerData.identificationNumber
                         ) {
-                          try {
-                            const newCustomer: Customer = {
-                              id: `customer-${Date.now()}`,
-                              name: newCustomerData.name,
-                              email: newCustomerData.email,
-                              phone: newCustomerData.phone || "",
-                              nationality: "",
-                              identificationType:
-                                newCustomerData.identificationType,
-                              identificationNumber:
-                                newCustomerData.identificationNumber,
-                              createdAt: new Date().toISOString(),
-                            };
+                          // Create a temporary customer object for this booking
+                          const tempCustomer = {
+                            id: "new-customer",
+                            name: newCustomerData.name,
+                            email: newCustomerData.email,
+                            phone: newCustomerData.phone,
+                            createdAt: new Date().toISOString(),
+                            identificationType:
+                              newCustomerData.identificationType,
+                            identificationNumber:
+                              newCustomerData.identificationNumber,
+                          } as Customer;
 
-                            // Add customer to state (would dispatch ADD_CUSTOMER action in real app)
-                            state.customers?.push(newCustomer);
-
-                            setSelectedCustomer(newCustomer);
-                            setBookingData({
-                              ...bookingData,
-                              guestId: newCustomer.id,
-                            });
-                            setShowCustomerForm(false);
-                            setNewCustomerData({
-                              name: "",
-                              email: "",
-                              phone: "",
-                              address: "",
-                              identificationType: "nic" as "nic" | "passport",
-                              identificationNumber: "",
-                            });
-                          } catch (error) {
-                            console.error("Failed to create customer:", error);
-                          }
+                          setSelectedCustomer(tempCustomer);
+                          setBookingData({
+                            ...bookingData,
+                            guestId: "new-customer",
+                            organizerName: newCustomerData.name,
+                            organizerEmail: newCustomerData.email,
+                            organizerPhone: newCustomerData.phone,
+                          });
+                          setShowCustomerForm(false);
                         }
                       }}
                       disabled={
@@ -1308,7 +1281,7 @@ export const EventBookingWorkflow: React.FC = () => {
                         Email
                       </label>
                       <p className="text-gray-900 dark:text-gray-100">
-                        {selectedCustomer.email || "Not provided"}
+                        {selectedCustomer.email}
                       </p>
                     </div>
                     <div>
@@ -1324,12 +1297,11 @@ export const EventBookingWorkflow: React.FC = () => {
                         Identification Type
                       </label>
                       <p className="text-gray-900 dark:text-gray-100">
-                        {(selectedCustomer as any).identificationType === "nic"
+                        {(selectedCustomer as any).nic
                           ? "NIC"
-                          : (selectedCustomer as any).identificationType ===
-                            "passport"
+                          : (selectedCustomer as any).passport
                           ? "Passport"
-                          : "Not provided"}
+                          : "Not specified"}
                       </p>
                     </div>
                     <div>
@@ -1337,7 +1309,8 @@ export const EventBookingWorkflow: React.FC = () => {
                         ID Number
                       </label>
                       <p className="text-gray-900 dark:text-gray-100">
-                        {(selectedCustomer as any).identificationNumber ||
+                        {(selectedCustomer as any).nic ||
+                          (selectedCustomer as any).passport ||
                           "Not provided"}
                       </p>
                     </div>
@@ -1410,70 +1383,66 @@ export const EventBookingWorkflow: React.FC = () => {
                       <div className="p-6 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                              {selectedPackageForDisplay.name}
-                            </h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                              {selectedPackageForDisplay.description}
-                            </p>
-                            <div className="flex items-center gap-4">
-                              <div>
-                                <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                                  ${selectedPackageForDisplay.basePrice}
-                                </span>
-                                <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">
-                                  base price
-                                </span>
-                              </div>
-                              <div className="text-sm text-gray-600 dark:text-gray-400">
-                                Tax: {selectedPackageForDisplay.taxRate}%
-                              </div>
-                            </div>
-                          </div>
-
-                          <div>
-                            <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
-                              Included Services:
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                              Package Name
                             </h5>
-                            {selectedPackageForDisplay.includedServices &&
-                            selectedPackageForDisplay.includedServices.length >
-                              0 ? (
-                              <ul className="space-y-2">
-                                {selectedPackageForDisplay.includedServices.map(
-                                  (service: string, index: number) => (
-                                    <li
-                                      key={index}
-                                      className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
-                                    >
-                                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                      <span>{service}</span>
-                                    </li>
-                                  )
-                                )}
-                              </ul>
-                            ) : (
-                              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
-                                No specific services listed for this package
-                              </div>
-                            )}
+                            <p className="text-gray-700 dark:text-gray-300">
+                              {selectedPackageForDisplay.name}
+                            </p>
+                          </div>
+                          <div>
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                              Base Price
+                            </h5>
+                            <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                              ${selectedPackageForDisplay.basePrice}
+                            </p>
+                          </div>
+                          <div>
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                              Included Hours
+                            </h5>
+                            <p className="text-gray-700 dark:text-gray-300">
+                              {selectedPackageForDisplay.includedHours || 8}{" "}
+                              hours
+                            </p>
+                          </div>
+                          <div>
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                              Tax Rate
+                            </h5>
+                            <p className="text-gray-700 dark:text-gray-300">
+                              {selectedPackageForDisplay.taxRate || 8.5}%
+                            </p>
                           </div>
                         </div>
 
-                        {selectedPackageForDisplay.applicableEventTypes &&
-                          selectedPackageForDisplay.applicableEventTypes
-                            .length > 0 && (
-                            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                        {selectedPackageForDisplay.description && (
+                          <div>
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                              Description
+                            </h5>
+                            <p className="text-gray-700 dark:text-gray-300">
+                              {selectedPackageForDisplay.description}
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedPackageForDisplay.includedServices &&
+                          selectedPackageForDisplay.includedServices.length >
+                            0 && (
+                            <div>
                               <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-                                Suitable for Event Types:
+                                Included Services
                               </h5>
                               <div className="flex flex-wrap gap-2">
-                                {selectedPackageForDisplay.applicableEventTypes.map(
-                                  (eventType: string, index: number) => (
+                                {selectedPackageForDisplay.includedServices.map(
+                                  (service: string) => (
                                     <span
-                                      key={index}
-                                      className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs rounded-full capitalize"
+                                      key={service}
+                                      className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm rounded-md"
                                     >
-                                      {eventType}
+                                      {service}
                                     </span>
                                   )
                                 )}
@@ -1521,58 +1490,149 @@ export const EventBookingWorkflow: React.FC = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Select
-                label="Decoration Type"
-                value={bookingData.decorationType}
-                onChange={(e) =>
-                  setBookingData({
-                    ...bookingData,
-                    decorationType: e.target.value,
-                  })
-                }
-                options={[
-                  { value: "", label: "Select decoration type" },
-                  { value: "elegant", label: "Elegant" },
-                  { value: "modern", label: "Modern" },
-                  { value: "traditional", label: "Traditional" },
-                  { value: "rustic", label: "Rustic" },
-                  { value: "vintage", label: "Vintage" },
-                  { value: "minimalist", label: "Minimalist" },
-                  { value: "luxury", label: "Luxury" },
-                  { value: "casual", label: "Casual" },
-                  { value: "themed", label: "Themed" },
-                  { value: "other", label: "Other" },
-                ]}
-              />
-              <Select
-                label="Catering Requirements"
-                value={bookingData.cateringRequirements}
-                onChange={(e) =>
-                  setBookingData({
-                    ...bookingData,
-                    cateringRequirements: e.target.value,
-                  })
-                }
-                options={[
-                  { value: "", label: "Select catering requirements" },
-                  { value: "vegetarian", label: "Vegetarian" },
-                  { value: "vegan", label: "Vegan" },
-                  { value: "halal", label: "Halal" },
-                  { value: "kosher", label: "Kosher" },
-                  { value: "gluten-free", label: "Gluten-Free" },
-                  {
-                    value: "no-restrictions",
-                    label: "No Dietary Restrictions",
-                  },
-                  { value: "mixed", label: "Mixed Options" },
-                  { value: "buffet", label: "Buffet Style" },
-                  { value: "plated", label: "Plated Service" },
-                  { value: "cocktail", label: "Cocktail Style" },
-                  { value: "other", label: "Other" },
-                ]}
-              />
+            {/* Additional Services */}
+            <div className="space-y-4">
+              <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                Additional Services & Requirements
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                  label="Decoration Type"
+                  value={bookingData.decorationType}
+                  onChange={(e) =>
+                    setBookingData({
+                      ...bookingData,
+                      decorationType: e.target.value,
+                    })
+                  }
+                  options={[
+                    { value: "", label: "Select decoration type" },
+                    { value: "elegant", label: "Elegant" },
+                    { value: "modern", label: "Modern" },
+                    { value: "traditional", label: "Traditional" },
+                    { value: "rustic", label: "Rustic" },
+                    { value: "vintage", label: "Vintage" },
+                    { value: "minimalist", label: "Minimalist" },
+                    { value: "luxury", label: "Luxury" },
+                    { value: "casual", label: "Casual" },
+                    { value: "themed", label: "Themed" },
+                    { value: "other", label: "Other" },
+                  ]}
+                />
+                <Select
+                  label="Catering Requirements"
+                  value={bookingData.cateringRequirements}
+                  onChange={(e) =>
+                    setBookingData({
+                      ...bookingData,
+                      cateringRequirements: e.target.value,
+                    })
+                  }
+                  options={[
+                    { value: "", label: "Select catering requirements" },
+                    { value: "vegetarian", label: "Vegetarian" },
+                    { value: "vegan", label: "Vegan" },
+                    { value: "halal", label: "Halal" },
+                    { value: "kosher", label: "Kosher" },
+                    { value: "gluten-free", label: "Gluten-Free" },
+                    {
+                      value: "no-restrictions",
+                      label: "No Dietary Restrictions",
+                    },
+                    { value: "mixed", label: "Mixed Options" },
+                    { value: "buffet", label: "Buffet Style" },
+                    { value: "plated", label: "Plated Service" },
+                    { value: "cocktail", label: "Cocktail Style" },
+                    { value: "other", label: "Other" },
+                  ]}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Special Requirements
+                </label>
+                <textarea
+                  value={bookingData.requirements}
+                  onChange={(e) =>
+                    setBookingData({
+                      ...bookingData,
+                      requirements: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 resize-none"
+                  rows={3}
+                  placeholder="Any specific requirements for decorations, catering, equipment, or other services..."
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Describe any specific needs for your event setup
+                </p>
+              </div>
             </div>
+
+            {/* Pricing Preview */}
+            {(bookingData.packageId || bookingData.customPricing) && (
+              <Card title="Pricing Preview">
+                <div className="p-6">
+                  <div className="space-y-3">
+                    {bookingData.packageId && selectedPackageForDisplay ? (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 dark:text-gray-300">
+                          {selectedPackageForDisplay.name}
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                          ${selectedPackageForDisplay.basePrice}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 dark:text-gray-300">
+                          Custom Pricing
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                          ${bookingData.customPricing}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                      <div className="flex justify-between items-center text-lg font-semibold">
+                        <span className="text-gray-900 dark:text-gray-100">
+                          Estimated Total
+                        </span>
+                        <span className="text-green-600 dark:text-green-400">
+                          $
+                          {bookingData.packageId && selectedPackageForDisplay
+                            ? selectedPackageForDisplay.basePrice
+                            : bookingData.customPricing}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Final pricing will be calculated based on actual
+                        duration and additional services
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* Package Information */}
+            {applicablePackages.length === 0 && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                  <h4 className="font-medium text-yellow-800 dark:text-yellow-400">
+                    No Packages Available
+                  </h4>
+                </div>
+                <p className="text-yellow-700 dark:text-yellow-300 mt-1">
+                  No event packages are currently available for the selected
+                  event type. Please use custom pricing instead.
+                </p>
+              </div>
+            )}
           </div>
         );
 
@@ -1624,7 +1684,7 @@ export const EventBookingWorkflow: React.FC = () => {
                     </div>
                     <div>
                       <span className="font-medium text-gray-700 dark:text-gray-300">
-                        Type:
+                        Event Type:
                       </span>
                       <p className="text-gray-900 dark:text-gray-100 capitalize">
                         {bookingData.eventType}
@@ -1632,10 +1692,28 @@ export const EventBookingWorkflow: React.FC = () => {
                     </div>
                     <div>
                       <span className="font-medium text-gray-700 dark:text-gray-300">
-                        Organizer:
+                        Start Date:
                       </span>
                       <p className="text-gray-900 dark:text-gray-100">
-                        {bookingData.organizerName}
+                        {new Date(bookingData.startDateTime).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        End Date:
+                      </span>
+                      <p className="text-gray-900 dark:text-gray-100">
+                        {new Date(bookingData.endDateTime).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Duration:
+                      </span>
+                      <p className="text-gray-900 dark:text-gray-100">
+                        {eventDuration
+                          ? `${eventDuration.hours.toFixed(1)} hours`
+                          : "Not calculated"}
                       </p>
                     </div>
                     <div>
@@ -1643,31 +1721,7 @@ export const EventBookingWorkflow: React.FC = () => {
                         Attendees:
                       </span>
                       <p className="text-gray-900 dark:text-gray-100">
-                        {bookingData.expectedAttendees}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">
-                        Start:
-                      </span>
-                      <p className="text-gray-900 dark:text-gray-100">
-                        {new Date(
-                          bookingData.startDateTime
-                        ).toLocaleDateString()}{" "}
-                        at{" "}
-                        {new Date(
-                          bookingData.startDateTime
-                        ).toLocaleTimeString()}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">
-                        End:
-                      </span>
-                      <p className="text-gray-900 dark:text-gray-100">
-                        {new Date(bookingData.endDateTime).toLocaleDateString()}{" "}
-                        at{" "}
-                        {new Date(bookingData.endDateTime).toLocaleTimeString()}
+                        {bookingData.expectedAttendees} people
                       </p>
                     </div>
                   </div>
@@ -1675,11 +1729,62 @@ export const EventBookingWorkflow: React.FC = () => {
                   {selectedHall && (
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                       <span className="font-medium text-gray-700 dark:text-gray-300">
-                        Hall:
+                        Selected Hall:
                       </span>
                       <p className="text-gray-900 dark:text-gray-100">
                         {selectedHall.name} - {selectedHall.location}
                       </p>
+                    </div>
+                  )}
+
+                  {selectedCustomer && (
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Customer:
+                      </span>
+                      <p className="text-gray-900 dark:text-gray-100">
+                        {selectedCustomer.name}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {selectedCustomer.email}
+                      </p>
+                    </div>
+                  )}
+
+                  {(bookingData.decorationType ||
+                    bookingData.cateringRequirements) && (
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Additional Services:
+                      </span>
+                      {bookingData.decorationType && (
+                        <p className="text-gray-900 dark:text-gray-100">
+                          Decoration: {bookingData.decorationType}
+                        </p>
+                      )}
+                      {bookingData.cateringRequirements && (
+                        <p className="text-gray-900 dark:text-gray-100">
+                          Catering: {bookingData.cateringRequirements}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {(bookingData.notes || bookingData.requirements) && (
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Notes & Requirements:
+                      </span>
+                      {bookingData.notes && (
+                        <p className="text-gray-900 dark:text-gray-100 text-sm mt-1">
+                          {bookingData.notes}
+                        </p>
+                      )}
+                      {bookingData.requirements && (
+                        <p className="text-gray-900 dark:text-gray-100 text-sm mt-1">
+                          {bookingData.requirements}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1691,29 +1796,23 @@ export const EventBookingWorkflow: React.FC = () => {
                   {selectedPackage ? (
                     <div>
                       <span className="font-medium text-gray-700 dark:text-gray-300">
-                        Package:
+                        Selected Package:
                       </span>
                       <p className="text-gray-900 dark:text-gray-100">
                         {selectedPackage.name}
                       </p>
-                      <div className="mt-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Included Services:
-                        </span>
-                        <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {selectedPackage.includedServices.map(
-                            (service, index) => (
-                              <li key={index}>{service}</li>
-                            )
-                          )}
-                        </ul>
-                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Includes {selectedPackage.includedHours || 8} hours
+                      </p>
                     </div>
                   ) : (
                     <div>
                       <span className="font-medium text-gray-700 dark:text-gray-300">
-                        Custom Pricing
+                        Pricing Method:
                       </span>
+                      <p className="text-gray-900 dark:text-gray-100">
+                        Custom Pricing
+                      </p>
                     </div>
                   )}
 
@@ -1722,33 +1821,30 @@ export const EventBookingWorkflow: React.FC = () => {
                       <span className="text-gray-700 dark:text-gray-300">
                         Base Amount:
                       </span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                      <span className="text-gray-900 dark:text-gray-100">
                         ${pricing.baseAmount.toFixed(2)}
                       </span>
                     </div>
 
                     {pricing.overtimeCharges > 0 && (
-                      <div className="flex justify-between text-orange-600 dark:text-orange-400">
-                        <span className="flex items-center gap-1">
-                          Additional Hours Fees:
-                          <span className="text-xs text-gray-500">
-                            (
-                            {eventDuration
-                              ? (
-                                  eventDuration.hours -
-                                  eventDuration.standardHours
-                                ).toFixed(1)
-                              : "0"}{" "}
-                            hrs × $
-                            {selectedHall
-                              ? (selectedHall.pricePerHour * 1.5).toFixed(2)
-                              : "0"}
-                            )
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Overtime Charges:
                           </span>
-                        </span>
-                        <span className="font-medium">
-                          +${pricing.overtimeCharges.toFixed(2)}
-                        </span>
+                          <span className="text-gray-900 dark:text-gray-100">
+                            ${pricing.overtimeCharges.toFixed(2)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          {eventDuration &&
+                          eventDuration.hours > eventDuration.standardHours
+                            ? `${(
+                                eventDuration.hours -
+                                eventDuration.standardHours
+                              ).toFixed(1)} extra hours at 150% rate`
+                            : "Extra time charges applied"}
+                        </p>
                       </div>
                     )}
 
@@ -1756,7 +1852,7 @@ export const EventBookingWorkflow: React.FC = () => {
                       <span className="text-gray-700 dark:text-gray-300">
                         Subtotal:
                       </span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                      <span className="text-gray-900 dark:text-gray-100">
                         ${pricing.total.toFixed(2)}
                       </span>
                     </div>
@@ -1764,13 +1860,13 @@ export const EventBookingWorkflow: React.FC = () => {
                       <span className="text-gray-700 dark:text-gray-300">
                         Tax ({selectedPackage?.taxRate || 8.5}%):
                       </span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                      <span className="text-gray-900 dark:text-gray-100">
                         ${taxAmount.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between text-lg font-bold border-t border-gray-200 dark:border-gray-700 pt-2">
                       <span className="text-gray-900 dark:text-gray-100">
-                        Total:
+                        Total Amount:
                       </span>
                       <span className="text-green-600 dark:text-green-400">
                         ${finalTotal.toFixed(2)}
@@ -1901,8 +1997,15 @@ export const EventBookingWorkflow: React.FC = () => {
           </div>
         );
 
+      // Rest of the cases remain the same for now - implementing a minimal version
       default:
-        return null;
+        return (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">
+              Step {currentStep} content will be implemented here.
+            </p>
+          </div>
+        );
     }
   };
 

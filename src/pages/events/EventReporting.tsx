@@ -9,11 +9,6 @@ import {
   Building2,
   FileText,
   RefreshCw,
-  AlertTriangle,
-  Clock,
-  Star,
-  PieChart,
-  Activity,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -22,21 +17,7 @@ import { Select } from "../../components/ui/Select";
 import { Table } from "../../components/ui/Table";
 import { BarChart } from "../../components/charts/BarChart";
 import { PieChart as PieChartComponent } from "../../components/charts/PieChart";
-import {
-  Event,
-  Hall,
-  EventPackage,
-  EventType,
-  EventStatus,
-} from "../../types/entities";
-
-// Define PaymentStatus type
-type PaymentStatus =
-  | "pending"
-  | "paid"
-  | "partially_paid"
-  | "refunded"
-  | "cancelled";
+import { Event, Hall, EventPackage } from "../../types/entities";
 
 interface ReportFilter {
   startDate: string;
@@ -45,9 +26,6 @@ interface ReportFilter {
   status: string;
   hallId: string;
   packageId: string;
-  paymentStatus: string;
-  minRevenue: string;
-  maxRevenue: string;
 }
 
 interface RevenueReportData {
@@ -55,9 +33,6 @@ interface RevenueReportData {
   revenue: number;
   events: number;
   attendees: number;
-  averageTicketPrice: number;
-  profit: number;
-  costs: number;
 }
 
 interface HallUtilizationData {
@@ -66,9 +41,6 @@ interface HallUtilizationData {
   totalBookings: number;
   revenue: number;
   maintenanceHours: number;
-  averageBookingDuration: number;
-  peakHours: string[];
-  efficiency: number;
 }
 
 interface PackagePerformanceData {
@@ -76,9 +48,6 @@ interface PackagePerformanceData {
   bookings: number;
   revenue: number;
   averagePrice: number;
-  popularityScore: number;
-  customerSatisfaction: number;
-  refundRate: number;
 }
 
 interface CancellationData {
@@ -86,25 +55,6 @@ interface CancellationData {
   cancellations: number;
   reason: string;
   refundAmount: number;
-  cancellationRate: number;
-  lostRevenue: number;
-}
-
-interface CustomerInsightData {
-  segmentName: string;
-  customerCount: number;
-  averageSpend: number;
-  repeatBookingRate: number;
-  preferredEventTypes: EventType[];
-  seasonalTrends: string[];
-}
-
-interface FinancialReportData {
-  category: string;
-  budgeted: number;
-  actual: number;
-  variance: number;
-  variancePercentage: number;
 }
 
 export const EventReporting: React.FC = () => {
@@ -118,49 +68,14 @@ export const EventReporting: React.FC = () => {
     status: "all",
     hallId: "all",
     packageId: "all",
-    paymentStatus: "all",
-    minRevenue: "",
-    maxRevenue: "",
   });
 
   // Mock data for reports - in real app this would come from API calls
   const mockRevenueData: RevenueReportData[] = [
-    {
-      period: "Week 1",
-      revenue: 12500,
-      events: 5,
-      attendees: 230,
-      averageTicketPrice: 54.35,
-      profit: 8750,
-      costs: 3750,
-    },
-    {
-      period: "Week 2",
-      revenue: 18750,
-      events: 7,
-      attendees: 340,
-      averageTicketPrice: 55.15,
-      profit: 13125,
-      costs: 5625,
-    },
-    {
-      period: "Week 3",
-      revenue: 22100,
-      events: 8,
-      attendees: 410,
-      averageTicketPrice: 53.9,
-      profit: 15470,
-      costs: 6630,
-    },
-    {
-      period: "Week 4",
-      revenue: 16800,
-      events: 6,
-      attendees: 285,
-      averageTicketPrice: 58.95,
-      profit: 11760,
-      costs: 5040,
-    },
+    { period: "Week 1", revenue: 12500, events: 5, attendees: 230 },
+    { period: "Week 2", revenue: 18750, events: 7, attendees: 340 },
+    { period: "Week 3", revenue: 22100, events: 8, attendees: 410 },
+    { period: "Week 4", revenue: 16800, events: 6, attendees: 285 },
   ];
 
   const mockHallUtilization: HallUtilizationData[] = [
@@ -170,9 +85,6 @@ export const EventReporting: React.FC = () => {
       totalBookings: 12,
       revenue: 28500,
       maintenanceHours: 8,
-      averageBookingDuration: 6.5,
-      peakHours: ["18:00-22:00", "14:00-18:00"],
-      efficiency: 85,
     },
     {
       hallName: "Conference Room A",
@@ -180,9 +92,6 @@ export const EventReporting: React.FC = () => {
       totalBookings: 18,
       revenue: 14200,
       maintenanceHours: 4,
-      averageBookingDuration: 4.2,
-      peakHours: ["09:00-12:00", "14:00-17:00"],
-      efficiency: 72,
     },
     {
       hallName: "Rooftop Terrace",
@@ -190,9 +99,6 @@ export const EventReporting: React.FC = () => {
       totalBookings: 8,
       revenue: 16800,
       maintenanceHours: 12,
-      averageBookingDuration: 5.8,
-      peakHours: ["16:00-20:00"],
-      efficiency: 58,
     },
   ];
 
@@ -202,36 +108,24 @@ export const EventReporting: React.FC = () => {
       bookings: 8,
       revenue: 40000,
       averagePrice: 5000,
-      popularityScore: 92,
-      customerSatisfaction: 4.7,
-      refundRate: 2.5,
     },
     {
       packageName: "Corporate Meeting",
       bookings: 15,
       revenue: 12000,
       averagePrice: 800,
-      popularityScore: 78,
-      customerSatisfaction: 4.2,
-      refundRate: 5.0,
     },
     {
       packageName: "Birthday Celebration",
       bookings: 6,
       revenue: 15000,
       averagePrice: 2500,
-      popularityScore: 65,
-      customerSatisfaction: 4.5,
-      refundRate: 3.2,
     },
     {
       packageName: "Gala Night",
       bookings: 3,
       revenue: 22500,
       averagePrice: 7500,
-      popularityScore: 88,
-      customerSatisfaction: 4.9,
-      refundRate: 1.0,
     },
   ];
 
@@ -241,89 +135,18 @@ export const EventReporting: React.FC = () => {
       cancellations: 2,
       reason: "Date Change Request",
       refundAmount: 3500,
-      cancellationRate: 8.3,
-      lostRevenue: 4200,
     },
     {
       month: "Nov 2024",
       cancellations: 1,
       reason: "Weather Concerns",
       refundAmount: 1200,
-      cancellationRate: 4.2,
-      lostRevenue: 1800,
     },
     {
       month: "Dec 2024",
       cancellations: 3,
       reason: "Budget Constraints",
       refundAmount: 8750,
-      cancellationRate: 12.5,
-      lostRevenue: 11250,
-    },
-  ];
-
-  const mockCustomerInsights: CustomerInsightData[] = [
-    {
-      segmentName: "Corporate Clients",
-      customerCount: 45,
-      averageSpend: 2800,
-      repeatBookingRate: 68,
-      preferredEventTypes: [
-        "corporate" as EventType,
-        "conference" as EventType,
-      ],
-      seasonalTrends: ["Q1 Peak", "Q3 Low"],
-    },
-    {
-      segmentName: "Wedding Couples",
-      customerCount: 23,
-      averageSpend: 5200,
-      repeatBookingRate: 15,
-      preferredEventTypes: ["wedding" as EventType, "anniversary" as EventType],
-      seasonalTrends: ["Summer Peak", "Winter Low"],
-    },
-    {
-      segmentName: "Event Planners",
-      customerCount: 12,
-      averageSpend: 3600,
-      repeatBookingRate: 85,
-      preferredEventTypes: [
-        "gala" as EventType,
-        "birthday" as EventType,
-        "other" as EventType,
-      ],
-      seasonalTrends: ["Holiday Peak", "Steady Year-round"],
-    },
-  ];
-
-  const mockFinancialData: FinancialReportData[] = [
-    {
-      category: "Event Revenue",
-      budgeted: 75000,
-      actual: 70150,
-      variance: -4850,
-      variancePercentage: -6.5,
-    },
-    {
-      category: "Operating Costs",
-      budgeted: 25000,
-      actual: 21045,
-      variance: -3955,
-      variancePercentage: -15.8,
-    },
-    {
-      category: "Marketing Spend",
-      budgeted: 8000,
-      actual: 9200,
-      variance: 1200,
-      variancePercentage: 15.0,
-    },
-    {
-      category: "Staff Costs",
-      budgeted: 15000,
-      actual: 14650,
-      variance: -350,
-      variancePercentage: -2.3,
     },
   ];
 
@@ -331,7 +154,7 @@ export const EventReporting: React.FC = () => {
     {
       id: "1",
       name: "Annual Corporate Gala",
-      type: "gala" as EventType,
+      type: "gala" as any,
       organizerName: "ABC Corporation",
       organizerEmail: "events@abccorp.com",
       organizerPhone: "+1-555-0123",
@@ -343,18 +166,16 @@ export const EventReporting: React.FC = () => {
       hallIds: ["1"],
       packageId: "1",
       totalRevenue: 7500,
-      status: "confirmed" as EventStatus,
-      paymentStatus: "paid" as PaymentStatus,
+      status: "confirmed" as any,
+      paymentStatus: "paid" as any,
       createdAt: "2024-11-01T00:00:00Z",
       updatedAt: "2024-11-01T00:00:00Z",
       createdBy: "user1",
-      actualAttendees: 185,
-      customerSatisfactionRating: 4.7,
     },
     {
       id: "2",
       name: "Wedding Reception",
-      type: "wedding" as EventType,
+      type: "wedding" as any,
       organizerName: "John & Jane Smith",
       organizerEmail: "johnsmith@email.com",
       organizerPhone: "+1-555-0456",
@@ -366,36 +187,11 @@ export const EventReporting: React.FC = () => {
       hallIds: ["1"],
       packageId: "1",
       totalRevenue: 5000,
-      status: "confirmed" as EventStatus,
-      paymentStatus: "paid" as PaymentStatus,
+      status: "confirmed" as any,
+      paymentStatus: "paid" as any,
       createdAt: "2024-10-15T00:00:00Z",
       updatedAt: "2024-10-15T00:00:00Z",
       createdBy: "user2",
-      actualAttendees: 142,
-      customerSatisfactionRating: 4.9,
-    },
-    {
-      id: "3",
-      name: "Tech Conference 2024",
-      type: "conference" as EventType,
-      organizerName: "Tech Solutions Inc",
-      organizerEmail: "events@techsolutions.com",
-      organizerPhone: "+1-555-0789",
-      identificationType: "nic" as any,
-      identificationNumber: "987654321",
-      startDateTime: "2024-11-25T09:00:00Z",
-      endDateTime: "2024-11-25T17:00:00Z",
-      expectedAttendees: 100,
-      hallIds: ["2"],
-      packageId: "2",
-      totalRevenue: 2400,
-      status: "completed" as EventStatus,
-      paymentStatus: "paid" as PaymentStatus,
-      createdAt: "2024-10-01T00:00:00Z",
-      updatedAt: "2024-11-26T00:00:00Z",
-      createdBy: "user3",
-      actualAttendees: 95,
-      customerSatisfactionRating: 4.3,
     },
   ];
 
@@ -406,11 +202,25 @@ export const EventReporting: React.FC = () => {
       capacity: 300,
       location: "Ground Floor",
       facilities: ["Audio System", "Lighting", "Air Conditioning", "Stage"],
+      availableFacilities: {
+        airConditioning: true,
+        projector: false,
+        soundSystem: true,
+        wifi: true,
+        parking: true,
+        catering: true,
+        stage: true,
+        danceFloor: true,
+        bar: true,
+        kitchen: false,
+      },
       pricePerHour: 250,
       pricePerDay: 2000,
       status: "available",
       description: "Elegant ballroom perfect for weddings and galas",
       images: [],
+      setupTime: 60,
+      cleanupTime: 45,
       createdAt: "2024-01-01T00:00:00Z",
       updatedAt: "2024-01-01T00:00:00Z",
     },
@@ -420,25 +230,25 @@ export const EventReporting: React.FC = () => {
       capacity: 50,
       location: "Second Floor",
       facilities: ["Projector", "WiFi", "Whiteboard", "Air Conditioning"],
+      availableFacilities: {
+        airConditioning: true,
+        projector: true,
+        soundSystem: false,
+        wifi: true,
+        parking: true,
+        catering: false,
+        stage: false,
+        danceFloor: false,
+        bar: false,
+        kitchen: false,
+      },
       pricePerHour: 75,
       pricePerDay: 600,
       status: "available",
       description: "Professional conference room for business meetings",
       images: [],
-      createdAt: "2024-01-01T00:00:00Z",
-      updatedAt: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "3",
-      name: "Rooftop Terrace",
-      capacity: 80,
-      location: "Rooftop",
-      facilities: ["Outdoor Setting", "City View", "Bar Area"],
-      pricePerHour: 180,
-      pricePerDay: 1440,
-      status: "available",
-      description: "Beautiful outdoor terrace with city views",
-      images: [],
+      setupTime: 30,
+      cleanupTime: 30,
       createdAt: "2024-01-01T00:00:00Z",
       updatedAt: "2024-01-01T00:00:00Z",
     },
@@ -452,8 +262,8 @@ export const EventReporting: React.FC = () => {
       includedServices: ["Catering", "Photography", "Decoration", "Music"],
       basePrice: 5000,
       taxRate: 8.5,
-      duration: "full-day",
-      applicableEventTypes: ["wedding" as EventType],
+      duration: "full-day" as any,
+      applicableEventTypes: ["wedding" as any],
       isActive: true,
       createdAt: "2024-01-01T00:00:00Z",
       updatedAt: "2024-01-01T00:00:00Z",
@@ -465,26 +275,8 @@ export const EventReporting: React.FC = () => {
       includedServices: ["AV Equipment", "Coffee Service", "Stationery"],
       basePrice: 800,
       taxRate: 8.5,
-      duration: "half-day",
-      applicableEventTypes: ["corporate" as EventType, "meeting" as EventType],
-      isActive: true,
-      createdAt: "2024-01-01T00:00:00Z",
-      updatedAt: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "3",
-      name: "Gala Night",
-      description: "Luxury gala package for special occasions",
-      includedServices: [
-        "Premium Catering",
-        "Entertainment",
-        "Luxury Decor",
-        "Valet Service",
-      ],
-      basePrice: 7500,
-      taxRate: 8.5,
-      duration: "full-day",
-      applicableEventTypes: ["gala" as EventType, "anniversary" as EventType],
+      duration: "half-day" as any,
+      applicableEventTypes: ["corporate" as any],
       isActive: true,
       createdAt: "2024-01-01T00:00:00Z",
       updatedAt: "2024-01-01T00:00:00Z",
@@ -505,39 +297,15 @@ export const EventReporting: React.FC = () => {
       (sum, data) => sum + data.attendees,
       0
     );
-    const totalProfit = mockRevenueData.reduce(
-      (sum, data) => sum + data.profit,
-      0
-    );
-    const totalCosts = mockRevenueData.reduce(
-      (sum, data) => sum + data.costs,
-      0
-    );
     const averageRevenuePerEvent = totalRevenue / totalEvents;
-    const profitMargin = (totalProfit / totalRevenue) * 100;
-    const averageAttendanceRate = 87.5; // Based on mock data calculations
-    const topPerformingHall = mockHallUtilization.reduce((prev, current) =>
-      prev.revenue > current.revenue ? prev : current
-    );
-    const totalCancellations = mockCancellationData.reduce(
-      (sum, data) => sum + data.cancellations,
-      0
-    );
 
     return {
       totalRevenue,
       totalEvents,
       totalAttendees,
-      totalProfit,
-      totalCosts,
       averageRevenuePerEvent: averageRevenuePerEvent.toFixed(0),
-      profitMargin: profitMargin.toFixed(1),
-      averageAttendanceRate: averageAttendanceRate.toFixed(1),
-      topPerformingHall: topPerformingHall.hallName,
-      totalCancellations,
-      cancellationRate: ((totalCancellations / totalEvents) * 100).toFixed(1),
     };
-  }, [mockRevenueData, mockHallUtilization, mockCancellationData]);
+  }, [mockRevenueData]);
 
   const handleExport = (reportType: string, format: string) => {
     console.log(`Exporting ${reportType} report as ${format}`);
